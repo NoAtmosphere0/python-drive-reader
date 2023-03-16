@@ -20,7 +20,7 @@ class MBR:
             self.starting_sector = int.from_bytes(self.data[8:12], byteorder='little')
             self.total_sectors = int.from_bytes(self.data[12:16], byteorder='little')
 
-    def printMBR(self):
+    def printMBR(self): # Prints the MBR data such as the status, partition type, starting sector, and total sectors
         print("MBR data: ")
         print("Status: ", self.status)
         print("Partition type: ", self.partition_type)
@@ -31,10 +31,11 @@ class partition_table:
     def __init__(self) -> None:
         self.offset = 0x1BE
         self.size = 0x10
-    def read(self, drive):
+        self.partitions = {}
+    def readPT(self, drive): # Reads the partition table
         with open(drive, 'rb') as f:
             f.seek(self.offset)
-            for i in range(4):
+            for _ in range(4):
                 entry = f.read(16)
                 if entry[4] != 0:
                     start = int.from_bytes(entry[8:12], byteorder='little')
@@ -47,6 +48,14 @@ class partition_table:
                         0x0C: "FAT32",
                     }
                     partition_type_str = partition_types.get(partition_type, "Unknown")
-                    print(f"Partition {i+1} starting offset: {start*512} bytes, size: {size*512/1024/1024} mega bytes, type: {partition_type_str}")	
+                    #print(f"Partition {i+1} starting offset: {start*512} bytes, size: {size*512/1024/1024} mega bytes, type: {partition_type_str}")	
+                    self.partitions[partition_type_str] = [start * 512, size * 512]
+    
+    def get_partitions(self): # Returns the partition table
+        return self.partitions
 
-        
+    def print_partitions(self): # Prints the partition table
+        print("Partition table data: ")
+        for i in self.partitions:
+            print(f"Partition type: {i}, starting offset: {self.partitions[i][0]} bytes, size: {self.partitions[i][1]} bytes")
+        print("----------------------------------")    
