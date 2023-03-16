@@ -127,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# bin_files folder
+bin_files/
+bin_files/bin_disk_information.bin
+bin_files/bin_NTFS_Partition1.bin
+bin_files/bin_FAT32_Partition2.bin
