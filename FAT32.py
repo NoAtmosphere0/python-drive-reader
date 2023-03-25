@@ -40,5 +40,5 @@ class FAT32:
 
 bst = FAT32()
 #read from FAT32 partition
-bst.readBootSector('....') #replace with your path to fat32 partition: '\\\\.\\your_drive_name:'
-bst.printBootSector()
+bst.readBootSector(r"C:\Users\pkhoa\Documents\Operating System\Partition data-20230316T151812Z-001\Partition data\bin_FAT32_Partition2.bin")
+

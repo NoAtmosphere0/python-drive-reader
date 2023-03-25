@@ -1,6 +1,8 @@
 import os
+import time
 import tkinter as tk
 from tkinter import filedialog
+from tkinter import messagebox
 from disk_info import MBR, partition_table
 from FAT32 import FAT32
 from NTFS import NTFS
@@ -64,22 +66,29 @@ class FileExplorer:
         info["name"] = os.path.basename(path)
         info["path"] = path
         info["size"] = os.path.getsize(path)
-        info["modified"] = os.path.getmtime(path)
+        info["modified"] = os.path.getmtme(path)
         return info
-    def file_clicked(self, event):
-        # Get the selected file from the file listbox
-        selected_file = self.file_listbox.get(self.file_listbox.curselection())
     
-        # Get information about the selected file
-        file_info = get_file_info(os.path.join(self.current_directory, selected_file))
-    
-        # Show the file information in a message box
-        message = f"Name: {file_info['name']}\n"
-        message += f"Path: {file_info['path']}\n"
-        message += f"Size: {file_info['size']} bytes\n"
-        message += f"Modified: {time.ctime(file_info['modified'])}"
-        messagebox.showinfo("File Information", message)
- 
+    def get_click_path(self):
+        # Get the index of the selected file
+        selected_index = self.file_listbox.curselection()[0]
+        
+        # Get the name of the selected file
+        selected_file = self.file_listbox.get(selected_index)
+        
+        # Get the full path of the selected file
+        selected_path = os.path.join(self.current_directory, selected_file)
+        
+        return selected_path
+    def double_clicked (self, event):
+        path = self.get_click_path()
+        if os.path.isdir(path):
+            self.populate_file_listbox(path)
+        else:
+            self.open_file(path)
+        
+
+        
 # Create the application window and start the main event loop
 root = tk.Tk()
 app = FileExplorer(root)
