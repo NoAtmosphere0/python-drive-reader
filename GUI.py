@@ -39,20 +39,17 @@ class FileExplorer:
         # Populate the file listbox with the files in the initial directory
         self.current_directory = os.getcwd()
         self.populate_file_listbox(self.current_directory)
-
-    def browse_directory(self):
-        # Open a file dialog to allow the user to select a directory
-        selected_directory = filedialog.askdirectory()
-
-        if selected_directory:
-            # Update the directory path entry widget and current directory variable
-            self.dir_entry.delete(0, tk.END)
-            self.dir_entry.insert(0, selected_directory)
-            self.current_directory = selected_directory
-
-            # Populate the file listbox with the files in the selected directory
-            self.populate_file_listbox(self.current_directory)
-
+       
+    
+    def open_file(self, file_path):
+        try:
+            with open(file_path, 'r') as f:
+                contents = f.read()
+            return contents
+        except Exception as e:
+            print(f"Error opening file: {e}")
+            return None
+        
     def populate_file_listbox(self, directory):
         # Clear the file listbox
         self.file_listbox.delete(0, tk.END)
@@ -63,15 +60,6 @@ class FileExplorer:
         # Add each file to the file listbox
         for file in files:
             self.file_listbox.insert(tk.END, file)
-
-    def get_file_info(path):
-
-        info = {}
-        info["name"] = os.path.basename(path)
-        info["path"] = path
-        info["size"] = os.path.getsize(path)
-        info["modified"] = os.path.getmtme(path)
-        return info
 
     def get_click_path(self):
         # Get the index of the selected file
@@ -126,9 +114,25 @@ class FileExplorer:
                     }
                 }
             }
-        self.populate_file_listbox(self.dictionary_data)
 
     def browse_directory(self):
+        files = []
+        directories = []
+        
+        for filename in os.listdir(self.path):
+            full_path = os.path.join(self.path, filename)
+            if os.path.isdir(full_path):
+                directories.append(filename)
+            else:
+                files.append(filename)
+        
+        print("Files:")
+        for file in files:
+            print(file)
+        
+        print("\nDirectories:")
+        for directory in directories:
+            print(directory)
         # Open a file dialog to allow the user to select a directory
         selected_directory = filedialog.askdirectory()
 
@@ -173,29 +177,20 @@ class FileExplorer:
                 }
             }
         }
-    def display_dict(dict_data, indent=0, text_widget=None):
-        if text_widget is None:
-        # Create a new window
-            window = tk.Tk()
-            window.title("Dictionary Data")
-
-        # Create a text widget to display the data
-            text_widget = tk.Text(window, height=20, width=60)
-            text_widget.pack()
-
+    #create a def display_dic which display the dictionary and display data of the dictionary
+    def display_dict(dict_data, text_widget, indent=0):
         for key, value in dict_data.items():
         # Indent the key-value pairs to show the nesting
             text_widget.insert(tk.END, " " * indent + str(key) + ": ")
             if isinstance(value, dict):
                 text_widget.insert(tk.END, "\n")
-                display_dict(value, indent+4, text_widget)
-        else:
-            text_widget.insert(tk.END, str(value) + "\n")
 
-    def display_data(data):
-    # Call the display_dict function to display the data
-        display_dict(data)
-
+                display_dict(value, text_widget, indent+4)
+            else:
+                text_widget.insert(tk.END, str(value) + "\n")
+    def dis_data(self):
+        self.text.delete(1.0, tk.END)
+        self.display_dict(self.dictionary_data, self.text)   
 # Create the application window and start the main event loop
 root = tk.Tk()
 app = FileExplorer(root)
