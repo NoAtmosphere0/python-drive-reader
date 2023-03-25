@@ -133,6 +133,3 @@ bin_files/
 bin_files/bin_disk_information.bin
 bin_files/bin_NTFS_Partition1.bin
 bin_files/bin_FAT32_Partition2.bin
-
-#temp code runner file
-tempCodeRunnerFile.py
