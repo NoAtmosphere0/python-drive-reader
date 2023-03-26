@@ -1,1 +1,0 @@
-C:\Users\pkhoa\Documents\Operating System\Partition data-20230316T151812Z-001\Partition data\bin_NTFS_Partition1.bin
