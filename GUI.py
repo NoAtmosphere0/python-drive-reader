@@ -1,34 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
 
-class DriveExplorer:
-    def __init__(self, root, data):
-        self.root = root
-        self.root.title("Python Drive Reader")
-
-        self.treeview = ttk.Treeview(self.root)
-        self.treeview.pack(side="left", fill="both", expand=True)
-
-        vsb = ttk.Scrollbar(self.root, orient="vertical", command=self.treeview.yview)
-        vsb.pack(side='right', fill='y')
-
-        self.treeview.configure(yscrollcommand=vsb.set)
-
-        self.populate_treeview(data)
-
-    def populate_treeview(self, data, parent=""):
-        if isinstance(data, dict):
-            for key in data.keys():
-                item = self.treeview.insert(parent, 'end', text=key)
-                self.populate_treeview(data[key], item)
-        elif isinstance(data, list):
-            for i, item in enumerate(data):
-                self.populate_treeview(item, parent)
-        else:
-            self.treeview.insert(parent, 'end', text=data)
-
-root = tk.Tk()
-
 data = {
     "filename": {
         "type": "file",
@@ -64,5 +36,44 @@ data = {
     }
 }
 
-app = DriveExplorer(root, data)
+def add_items(parent, items):
+    for key, value in items.items():
+        node = tree.insert(parent, 'end', text=key, values=[value.get('type', ''), value.get('size', ''), value.get('created', ''), value.get('modified', '')])
+        if isinstance(value, dict):
+            add_items(node, value.get('contents', {}))
+
+# Create the GUI window
+root = tk.Tk()
+root.title("Disk Explorer")
+root.geometry("600x300")
+
+# Create a frame for the treeview widget
+frame = ttk.Frame(root)
+frame.pack(fill=tk.BOTH, expand=1)
+
+# Create a treeview widget
+tree = ttk.Treeview(frame, columns=('Type', 'Size', 'Created', 'Modified'), selectmode='browse')
+tree.pack(fill=tk.BOTH, expand=1)
+
+# Create the treeview columns
+tree.heading('#0', text='Name', anchor=tk.W)
+tree.heading('#1', text='Type', anchor=tk.W)
+tree.heading('#2', text='Size', anchor=tk.W)
+tree.heading('#3', text='Created', anchor=tk.W)
+tree.heading('#4', text='Modified', anchor=tk.W)
+
+# Create the treeview scrollbar
+scrollbar = ttk.Scrollbar(frame, orient=tk.VERTICAL, command=tree.yview)
+scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+tree.configure(yscrollcommand=scrollbar.set)
+
+
+
+
+
+
+
+# Add the data to the tree
+add_items('', data)
+
 root.mainloop()
