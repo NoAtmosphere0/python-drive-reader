@@ -11,14 +11,12 @@ def main():
     physical_drive = r"\\.\PhysicalDrive1"
     #! This path should be PhysicalDrive1 in the final version
 
-    # master_boot_record = disk_info.MBR(drive)
-    # master_boot_record.printMBR()
 
     """"Testing the partition table class"""
-    pt = disk_info.MBR(physical_drive)
-    pt.printMBR()
-    pt.readPT()
-    pt.loadInfo()
+    pt = disk_info.MBR(disk_info_path)
+    info_dict = pt.getInfoDict()
+
+    print(info_dict)
 
     """"Testing the NTFS class"""
     #ntfs = NTFS.NTFS(0, ntfs_path)
