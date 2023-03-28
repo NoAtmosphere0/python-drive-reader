@@ -1,13 +1,13 @@
-import NTFS 
-import disk_info 
+import NTFS
+import disk_info
 import GUI
 import FAT32
 
-def main():
 
-    ntfs_path = r"bin_files\bin_NTFS_Partition1.bin" 
+def main():
+    ntfs_path = r"bin_files\bin_NTFS_Partition1.bin"
     fat32_path = r"bin_files\bin_FAT32_Partition2.bin"
-    disk_info_path = r"bin_files\bin_disk_information.bin"
+    disk_info_path = r"C:\Users\pkhoa\Documents\Operating System\Partition data-20230316T151812Z-001\Partition data\bin_disk_information.bin"
     physical_drive = r"\\.\PhysicalDrive1"
     #! This path should be PhysicalDrive1 in the final version
 
@@ -25,6 +25,6 @@ def main():
 
     print("Exiting main()")
 
-if (__name__ == "__main__"):
-    main()
 
+if __name__ == "__main__":
+    main()
