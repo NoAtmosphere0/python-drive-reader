@@ -7,7 +7,7 @@ import json
 import platform
 import subprocess
 import tkinter as tk
-import win32api
+import psutil
 
 
 def import_data(file_path):
@@ -165,32 +165,10 @@ tree.heading(
 
 
 def detect_usb_formats():
-    drives = win32api.GetLogicalDriveStrings()
-    drives = drives.split("\000")[:-1]
-    usb_drives = [
-        drive for drive in drives if "removable" in win32api.GetVolumeInformation(drive)
-    ]
     partitions = {}
-    for usb_drive in usb_drives:
-        cmd = [
-            "wmic",
-            "partition",
-            "where",
-            f"DriveLetter='{usb_drive[:-1]}'",
-            "get",
-            "Name,FileSystem",
-            "/format:list",
-        ]
-        output = subprocess.check_output(cmd, universal_newlines=True)
-
-        # parse the output to extract the partition names and file systems
-        for line in output.splitlines():
-            if line.startswith("Name="):
-                partition_name = line.split("=")[1]
-            elif line.startswith("FileSystem="):
-                file_system = line.split("=")[1]
-                partitions[partition_name] = file_system
-
+    for partition in psutil.disk_partitions():
+        if "removable" in partition.opts:
+            partitions[partition.device] = partition.fstype
     return partitions
 
 
