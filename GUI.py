@@ -4,6 +4,10 @@ import NTFS
 import os
 import FAT32
 import json
+import platform
+import subprocess
+import tkinter as tk
+import win32api
 
 
 def import_data(file_path):
@@ -119,11 +123,6 @@ tree.column("#2", minwidth=100, width=150)
 tree.column("#3", minwidth=150, width=200)
 tree.column("#4", minwidth=150, width=200)
 
-# Create the treeview scrollbar
-scrollbar = ttk.Scrollbar(frame, orient=tk.VERTICAL, command=tree.yview)
-scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-tree.configure(yscrollcommand=scrollbar.set)
-
 
 # Sort the treeview items by clicking on the column headings (optional)
 def sort_column(tree, col, reverse):
@@ -163,6 +162,54 @@ tree.heading(
     anchor=tk.W,
     command=lambda: sort_column(tree, "#4", False),
 )
+
+
+def detect_usb_formats():
+    drives = win32api.GetLogicalDriveStrings()
+    drives = drives.split("\000")[:-1]
+    usb_drives = [
+        drive for drive in drives if "removable" in win32api.GetVolumeInformation(drive)
+    ]
+    partitions = {}
+    for usb_drive in usb_drives:
+        cmd = [
+            "wmic",
+            "partition",
+            "where",
+            f"DriveLetter='{usb_drive[:-1]}'",
+            "get",
+            "Name,FileSystem",
+            "/format:list",
+        ]
+        output = subprocess.check_output(cmd, universal_newlines=True)
+
+        # parse the output to extract the partition names and file systems
+        for line in output.splitlines():
+            if line.startswith("Name="):
+                partition_name = line.split("=")[1]
+            elif line.startswith("FileSystem="):
+                file_system = line.split("=")[1]
+                partitions[partition_name] = file_system
+
+    return partitions
+
+
+# Create a status bar
+def show_usb_formats():
+    partitions = detect_usb_formats()
+    text_widget = tk.Text(root, height=50, width=100)
+    for partition_name, file_system in partitions.items():
+        text_widget.insert(tk.END, f"{partition_name}: {file_system}\n")
+
+    status_bar = tk.Label(
+        root,
+        text=f"USB Status: {', '.join(partitions.values())}",
+        bd=1,
+        relief=tk.SUNKEN,
+        anchor=tk.W,
+    )
+
+    status_bar.pack(side=tk.TOP, fill=tk.X, ipady=10)
 
 
 # create class for menu items to be added to the right click menu (optional)
@@ -263,7 +310,7 @@ def save_data():
     # Get the data from the treeview
     data = get_items(tree, tree.get_children())
     # Save the data to the filen
-    with open("data_demo.py", "w") as f:
+    with open("data.txt", "w") as f:
         f.write("data = " + str(data))
 
 
@@ -271,4 +318,6 @@ def save_data():
 add_items("", data)
 
 
-root.mainloop()
+if __name__ == "__main__":
+    show_usb_formats()
+    root.mainloop()
