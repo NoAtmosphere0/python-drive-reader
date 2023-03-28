@@ -15,11 +15,13 @@ def main():
     # master_boot_record.printMBR()
 
     """"Testing the partition table class"""
-    pt = disk_info.MBR(disk_info_path)
+    pt = disk_info.MBR(physical_drive)
+    pt.printMBR()
+    pt.readPT()
+    pt.loadInfo()
 
     """"Testing the NTFS class"""
-    ntfs = NTFS.NTFS(0, ntfs_path)
-    ntfs.readMFT()
+    #ntfs = NTFS.NTFS(0, ntfs_path)
     
     #ntfs.print_entries()
 

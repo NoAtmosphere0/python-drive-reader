@@ -87,39 +87,87 @@ class NTFS:
     def readEntry(self, entry_offset):
         with open(self.drive_path, 'rb') as f:
             f.seek(entry_offset)
+
             entry = f.read(self.mft_record_size)
-            
-            if entry[0:4] != b"FILE" and entry[0:4] != b"BAAD":
+
+            # Check if the entry is in use
+            if entry[0:4] != b"FILE":
                 return None
-            
+
             entry_dict = {}
-            entry_dict["type"] = "FILE"
-            entry_dict["size"] = int.from_bytes(entry[48:56], byteorder='little', signed=True)
-            entry_dict["created_time"] = self.convert_time(int.from_bytes(entry[24:32], byteorder='little', signed=False))
-            entry_dict["modified_time"] = self.convert_time(int.from_bytes(entry[16:24], byteorder='little', signed=False))
-            entry_dict["accessed_time"] = self.convert_time(int.from_bytes(entry[8:16], byteorder='little', signed=False))
-            
-            # Get the filename from the FILE_NAME attribute
-            attribute_offset = int.from_bytes(entry[20:22], byteorder='little')
-            while attribute_offset != 0:
+
+            # Determine the entry type
+            if entry[0x16:0x18] == b"\x30\x00":
+                entry_dict["type"] = "FILE"
+            elif entry[0x16:0x18] == b"\x50\x00":
+                entry_dict["type"] = "FOLDER"
+            else:
+                entry_dict["type"] = "UNKNOWN"
+
+            # Get the entry size
+            entry_dict["size"] = int.from_bytes(entry[0x30:0x38], byteorder='little', signed=True)
+
+            # Get the created, modified, and accessed times
+            entry_dict["created_time"] = self.convert_time(int.from_bytes(entry[0x18:0x20], byteorder='little', signed=False))
+            entry_dict["modified_time"] = self.convert_time(int.from_bytes(entry[0x10:0x18], byteorder='little', signed=False))
+            entry_dict["accessed_time"] = self.convert_time(int.from_bytes(entry[0x08:0x10], byteorder='little', signed=False))
+
+            # Get the filename attribute
+            attribute_offset = self.get_attribute_offset(entry, 0x30)
+            if attribute_offset is None:
+                entry_dict["filename"] = "N/A"
+            else:
                 attribute = entry[attribute_offset:]
                 attribute_type = int.from_bytes(attribute[0:4], byteorder='little')
-                
-                if attribute_type == 0x30: # FILE_NAME attribute
-                    attribute_content_offset = int.from_bytes(attribute[20:22], byteorder='little')
+                if attribute_type == 0x30:
+                    attribute_content_offset = int.from_bytes(attribute[0x14:0x16], byteorder='little')
                     attribute_content = attribute[attribute_content_offset:]
-                    filename_len = int.from_bytes(attribute_content[64:65], byteorder='little')
-                    filename = attribute_content[66:66+filename_len].decode("utf-16")
+                    filename_len = int.from_bytes(attribute_content[0x40:0x41], byteorder='little')
+                    filename = attribute_content[0x42:0x42+filename_len].decode("utf-16")
                     entry_dict["filename"] = filename
-                    break
-                    
-                attribute_offset = int.from_bytes(attribute[4:6], byteorder='little')
-            
-            if "filename" not in entry_dict:
-                entry_dict["filename"] = "N/A"
-            
+                elif attribute_type == 0x50:
+                    entry_dict["filename"] = "N/A"
+                else:
+                    entry_dict["filename"] = "N/A"
+
+            # If the entry is a folder, get the subfolder entries
+            if entry_dict["type"] == "FOLDER":
+                entry_dict["subentries"] = []
+                attribute_offset = self.get_attribute_offset(entry, 0x90)
+                if attribute_offset is not None:
+                    attribute = entry[attribute_offset:]
+                    start_vcn = int.from_bytes(attribute[0x10:0x18], byteorder='little')
+                    end_vcn = int.from_bytes(attribute[0x18:0x20], byteorder='little')
+                    cluster_size = self.bytes_per_sector * self.sectors_per_cluster
+                    for i in range(start_vcn, end_vcn + 1):
+                        cluster_offset = self.mft_offset + i * cluster_size
+                        for j in range(self.records_per_cluster):
+                            entry_offset = cluster_offset + j * self.mft_record_size
+                            subentry_dict = self.readEntry(entry_offset)
+                            if subentry_dict is not None:
+                                entry_dict["subentries"].append(subentry_dict)
+
             return entry_dict
 
+
+    def get_attribute_offset(self, entry, attribute_type):
+        # Get the offset of the attribute with the specified type
+        offset = 0
+        while True:
+            # Get the attribute header
+            attribute_header = entry[offset:offset+16]
+            if attribute_header == b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00":
+                # This is the end of the attributes, so the attribute was not found
+                return None
+            # Get the attribute type and length
+            attribute_type_found = int.from_bytes(attribute_header[0:4], byteorder='little')
+            attribute_length = int.from_bytes(attribute_header[4:8], byteorder='little')
+            if attribute_type_found == attribute_type:
+                # This is the attribute we were looking for, so return its offset
+                return offset
+            # Move to the next attribute
+            offset += attribute_length
+        return None
 
 
     def convert_time(self, time_int):

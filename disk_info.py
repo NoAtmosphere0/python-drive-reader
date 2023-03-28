@@ -20,8 +20,6 @@ class MBR:
 
         self.info_dict = {}
 
-        self._readPT()
-        self._loadInfo()
 
         with open(drive, 'rb') as mbr:
             self.data = mbr.read(446)
@@ -29,6 +27,31 @@ class MBR:
             self.partition_type = hex(int.from_bytes(self.data[4:5], byteorder='little'))
             self.starting_sector = int.from_bytes(self.data[8:12], byteorder='little')
             self.total_sectors = int.from_bytes(self.data[12:16], byteorder='little')
+        
+
+            for i in range(4):
+                entry = mbr.read(16)
+                if entry[4] != 0:
+                    start = int.from_bytes(entry[8:12], byteorder='little')
+                    size = int.from_bytes(entry[12:16], byteorder='little')
+                    partition_type = entry[4]
+                    partition_types = {
+                        0x00: "Unused",
+                        0x07: "NTFS",
+                        0x0B: "FAT32",
+                        0x0C: "FAT32",
+                    }
+                    partition_type_str = partition_types.get(partition_type, "Unknown")
+                    print(f"Partition {i+1} starting offset: {start*512} bytes, size: {size*512/1024/1024} mega bytes, type: {partition_type_str}")	
+                    self.partitions[partition_type_str] = [start * 512, size * 512]
+
+        self.info_dict["partition_type"] = self.partition_type
+        self.info_dict["starting_sector"] = self.starting_sector
+        self.info_dict["total_sectors"] = self.total_sectors
+        self.info_dict["partitions"] = self.partitions
+        print(self.info_dict)            
+
+
 
     def printMBR(self): # Prints the MBR data such as the status, partition type, starting sector, and total sectors
         print("MBR data: ")
@@ -50,10 +73,10 @@ class MBR:
         self.info_dict["partitions"] = self.partitions
         print(self.info_dict)
 
-    def _readPT(self): # Reads the partition table
+    def readPT(self): # Reads the partition table
         with open(self.drive, 'rb') as f:
-            f.seek(self.offset)
-            for _ in range(4):
+            f.seek(446)
+            for _ in range(2):
                 entry = f.read(16)
                 if entry[4] != 0:
                     start = int.from_bytes(entry[8:12], byteorder='little')
@@ -68,7 +91,7 @@ class MBR:
                     partition_type_str = partition_types.get(partition_type, "Unknown")
                     #print(f"Partition {i+1} starting offset: {start*512} bytes, size: {size*512/1024/1024} mega bytes, type: {partition_type_str}")	
                     self.partitions[partition_type_str] = [start * 512, size * 512]
-    
+
     def get_partitions(self): # Returns the partition table
         return self.partitions
 

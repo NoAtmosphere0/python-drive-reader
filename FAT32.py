@@ -38,7 +38,7 @@ class FAT32:
         print("FSInfo: ", self.BPB_FSInfo)
         return 0
 
-bst = FAT32()
+#bst = FAT32()
 #read from FAT32 partition
-bst.readBootSector(r"C:\Users\pkhoa\Documents\Operating System\Partition data-20230316T151812Z-001\Partition data\bin_FAT32_Partition2.bin")
+#bst.readBootSector(r"C:\Users\pkhoa\Documents\Operating System\Partition data-20230316T151812Z-001\Partition data\bin_FAT32_Partition2.bin")
 

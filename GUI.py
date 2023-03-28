@@ -268,7 +268,7 @@ def save_data():
 
 
 # Add the data to the tree
-add_items("", data)
+#add_items("", data)
 
 
-root.mainloop()
+#root.mainloop()
