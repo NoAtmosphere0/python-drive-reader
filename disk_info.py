@@ -8,11 +8,21 @@
 
 class MBR:
     def __init__(self, drive) -> None: # Does not need to take any parameters
+        self.drive = drive
         self.data = None
         self.status = None
         self.partition_type = None
         self.starting_sector = None
         self.total_sectors = None
+        self.offset = 0x1BE
+        self.size = 0x10
+        self.partitions = {}
+
+        self.info_dict = {}
+
+        self._readPT()
+        self._loadInfo()
+
         with open(drive, 'rb') as mbr:
             self.data = mbr.read(446)
             self.status = hex(int.from_bytes(self.data[0:1], byteorder='little'))
@@ -27,13 +37,21 @@ class MBR:
         print("Starting sector: ", self.starting_sector)
         print("Total sectors: ", self.total_sectors)
         print("----------------------------------")
-class partition_table:
-    def __init__(self) -> None:
-        self.offset = 0x1BE
-        self.size = 0x10
-        self.partitions = {}
-    def readPT(self, drive): # Reads the partition table
-        with open(drive, 'rb') as f:
+
+    #returns disk information as a dictionary
+    def getInfo(self):
+        return self.info_dict
+    
+    #loads information into the dictionary
+    def _loadInfo(self):
+        self.info_dict["partition_type"] = self.partition_type
+        self.info_dict["starting_sector"] = self.starting_sector
+        self.info_dict["total_sectors"] = self.total_sectors
+        self.info_dict["partitions"] = self.partitions
+        print(self.info_dict)
+
+    def _readPT(self): # Reads the partition table
+        with open(self.drive, 'rb') as f:
             f.seek(self.offset)
             for _ in range(4):
                 entry = f.read(16)
@@ -57,5 +75,6 @@ class partition_table:
     def print_partitions(self): # Prints the partition table
         print("Partition table data: ")
         for i in self.partitions:
-            print(f"Partition type: {i}, starting offset: {self.partitions[i][0]} bytes, size: {self.partitions[i][1]} bytes")
-        print("----------------------------------")    
+            print(f"Partition type: {i}, starting offset: {self.partitions[i][0]} bytes, size: {self.partitions[i][1] / 1024 / 1024} mega bytes")
+        print("----------------------------------") 
+
