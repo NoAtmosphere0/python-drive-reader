@@ -8,6 +8,9 @@ import platform
 import subprocess
 import tkinter as tk
 import psutil
+import sys
+
+sys.setrecursionlimit(10000)
 
 
 def import_data(file_path):
@@ -75,18 +78,25 @@ def add_items(parent, items):
     )
 
 
-# Create the GUI window
 root = tk.Tk()
 root.title("Disk Explorer")
-root.geometry("1000x300")
+root.geometry("1200x300")
 
 # Create a frame for the treeview widget
-frame = ttk.Frame(root)
+frame = ttk.Frame(root)  # set the background color to blue
 frame.pack(fill=tk.BOTH, expand=1)
+
 # modify the frame to add a scrollbar
 frame.grid_rowconfigure(0, weight=1)
 frame.grid_columnconfigure(0, weight=1)
 
+# create a custom style for the frame
+style = ttk.Style(root)
+style.configure(
+    "Frame",
+    background="#00FFFF",
+    foreground="darkblue",
+)
 
 # Create a treeview widget
 tree = ttk.Treeview(
@@ -100,8 +110,8 @@ style = ttk.Style(root)
 
 style.configure(
     "Treeview.Heading",
-    background="#00FFFF",
-    foreground="darkblue",
+    background="#FF80AA",
+    foreground="black",
     font=(
         "Segoe UI",
         14,
@@ -164,30 +174,46 @@ tree.heading(
 )
 
 
-def detect_usb_formats():
-    partitions = {}
-    for partition in psutil.disk_partitions():
-        if "removable" in partition.opts:
-            partitions[partition.device] = partition.fstype
-    return partitions
-
-
-# Create a status bar
-def show_usb_formats():
-    partitions = detect_usb_formats()
-    text_widget = tk.Text(root, height=50, width=100)
-    for partition_name, file_system in partitions.items():
-        text_widget.insert(tk.END, f"{partition_name}: {file_system}\n")
-
-    status_bar = tk.Label(
+def create_statusbar(root):
+    # Create the status bar
+    statusbar = tk.Label(
         root,
-        text=f"USB Status: {', '.join(partitions.values())}",
+        text="USB Format: Unknown",
         bd=1,
         relief=tk.SUNKEN,
-        anchor=tk.W,
+        anchor="center",
+        background="#7FFFD4",
+        foreground="black",
+        font=("Segoe UI", 12),
     )
+    statusbar.pack(side=tk.BOTTOM, fill=tk.X, ipady=10)
 
-    status_bar.pack(side=tk.TOP, fill=tk.X, ipady=10)
+    # Update the status bar with the USB format
+    def update_statusbar():
+        partitions = psutil.disk_partitions()
+        for partition in partitions:
+            if "removable" in partition.opts:
+                try:
+                    usage = psutil.disk_usage(partition.mountpoint)
+                    format = partition.fstype
+                    statusbar.config(
+                        text=f"USB Format: {format} ({usage.free / 1024 / 1024:.2f} MB free)"
+                    )
+                    return
+                except:
+                    pass
+        statusbar.config(text="USB Format: Unknown")
+
+    # Update the status bar every 1 second
+    root.after(1000, update_statusbar)
+
+    # Create the status bar
+
+
+create_statusbar(root)
+
+# Create a frame for the treeview widget
+frame = ttk.Frame(root)
 
 
 # create class for menu items to be added to the right click menu (optional)
@@ -222,6 +248,28 @@ def on_right_click(event):
             if children:
                 d[key] = treeview_to_dict(tree)
         return d
+
+    # Save new folder to data.json
+    def save_folder():
+        with open("data.json", "w") as f:
+            json.dump(treeview_to_dict(tree), f, indent=4)
+
+    # auto save new folder to data.json every 5 seconds (optional)
+    root.after(5000, save_folder)
+
+    def treeview_from_dict(tree, d):
+        for key, value in d.items():
+            if isinstance(value, dict):
+                item = tree.insert("", "end", text=key, tags=("folder",))
+                treeview_from_dict(tree, value)
+            else:
+                tree.insert("", "end", text=key, values=value, tags=("file",))
+
+    # auto insert new_folder from data.json to treeview (optional)
+    def load_folder():
+        with open("data.json", "r") as f:
+            data = json.load(f)
+            treeview_from_dict(tree, data)
 
     # Create a command to delete the selected item (optional)
     def delete_item():
@@ -296,6 +344,4 @@ def save_data():
 add_items("", data)
 
 
-if __name__ == "__main__":
-    show_usb_formats()
-    root.mainloop()
+root.mainloop()
