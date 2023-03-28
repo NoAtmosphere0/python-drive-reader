@@ -8,9 +8,6 @@ import platform
 import subprocess
 import tkinter as tk
 import psutil
-import sys
-
-sys.setrecursionlimit(10000)
 
 
 def import_data(file_path):
