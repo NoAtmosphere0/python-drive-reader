@@ -255,10 +255,10 @@ DRIVE = FAT32(0, '\\\\.\G:') #change the drive letter here
 DRIVE.readBootSector() #read the boot sector -> get the starting offset. Noted this is the compulsary step
 
 RDET = (
-        DRIVE.getBootSector()['BPB_RsvdSecCnt'] +           #calculate the Root Directory Entry Table
-        DRIVE.getBootSector()['BPB_NumFATs'] *              #RDET = Reserved Sector Count + Number of FATs * Sectors per FAT + Starting Offset
-        DRIVE.getBootSector()['BPB_SecsPerFAT'] + 
-        DRIVE.getBootSector()['StartingOffset']
+        DRIVE.getBootSector()['BPB_RsvdSecCnt'] +           
+        DRIVE.getBootSector()['BPB_NumFATs'] *              #calculate the Root Directory Entry Table
+        DRIVE.getBootSector()['BPB_SecsPerFAT'] +           #RDET = Reserved Sector Count + Number of FATs * Sectors per FAT + Starting Offset
+        DRIVE.getBootSector()['StartingOffset']             #RDET in FAT32 is stored in the root directory
         ) * DRIVE.getBootSector()['BPB_BytesPerSec'] 
 
 DRIVE.FindDirectory(RDET, DRIVE.getBootSector()['BPB_RootClus']) #find the directory of FAT32 drive
