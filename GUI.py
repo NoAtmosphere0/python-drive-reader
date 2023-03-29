@@ -1,35 +1,56 @@
 import tkinter as tk
-from tkinter import ttk
-import NTFS
-import os
-import FAT32
 import json
+import tkinter.ttk as ttk
+import disk_info
 
 
-def import_data(file_path):
+def import_data_ntfs(file_path):
     with open(file_path, "r") as file:
-        data = json.load(file)
-    return data
+        data_ntfs = json.load(file)
+    return data_ntfs
 
 
-data = import_data("data.txt")
+def import_data_fat32(file_path):
+    with open(file_path, "r") as file:
+        data_fat32 = json.load(file)
+    return data_fat32
+
+
+data_ntfs = import_data_ntfs("data_ntfs.txt")
+dat_fat32 = import_data_fat32("data_fat32.txt")
 
 
 # Load the data from data.txt into a Python dictionary
-def read_data():
-    with open("data.txt", "r") as f:
-        data = eval(f.read())
-    return data
+def read_data_ntfs():
+    with open("data_ntfs.txt", "r") as f:
+        data_ntfs = eval(f.read())
+    return data_ntfs
 
 
-data = read_data()
+def read_data_fat32():
+    with open("data_fat32.txt", "r") as j:
+        data_fat32 = eval(j.read())
+    return data_fat32
+
+
+data_ntfs = read_data_ntfs()
+data_fat32 = read_data_fat32()
 
 # Convert the Python dictionary to a JSON-formatted string
-json_data = json.dumps(data)
-
+json_data_ntfs = json.dumps(data_ntfs)
 # Write the JSON-formatted string to a new file
-with open("data.json", "w") as f:
-    f.write(json_data)
+with open("data_ntfs.json", "w") as f:
+    f.write(json_data_ntfs)
+
+json_data_fat32 = json.dumps(data_fat32)
+# Write the JSON-formatted string to a new file
+with open("data_fat32.json", "w") as j:
+    j.write(json_data_fat32)
+
+
+root = tk.Tk()
+root.title("Disk Explorer")
+root.geometry("1200x300")
 
 
 def add_items(parent, items):
@@ -54,92 +75,51 @@ def add_items(parent, items):
         if isinstance(value, dict):
             add_items(node, value.get("contents", {}))
 
-    # Configure the font for the treeview item's text
-    tree.tag_configure(
-        "folder",
-        font=(
-            "Segoe UI",
-            12,
-        ),
-    )
-    tree.tag_configure(
-        "file",
-        font=(
-            "Segoe UI",
-            12,
-        ),
-    )
-
-
-# Create the GUI window
-root = tk.Tk()
-root.title("Disk Explorer")
-root.geometry("1000x300")
 
 # Create a frame for the treeview widget
-frame = ttk.Frame(root)
+frame = ttk.Frame(root)  # set the background color to blue
 frame.pack(fill=tk.BOTH, expand=1)
 # modify the frame to add a scrollbar
 frame.grid_rowconfigure(0, weight=1)
 frame.grid_columnconfigure(0, weight=1)
-
-
+# create a custom style for the frame
+style = ttk.Style(root)
+style.configure(
+    "Frame",
+    background="#00FFFF",
+    foreground="darkblue",
+)
 # Create a treeview widget
 tree = ttk.Treeview(
     frame,
     columns=("Type", "Size", "Date Created", "Date Modified"),
     selectmode="browse",
 )
+
 tree.pack(fill=tk.BOTH, expand=1)
 # Create a custom style for the heading
 style = ttk.Style(root)
-
 style.configure(
     "Treeview.Heading",
-    background="#00FFFF",
-    foreground="darkblue",
+    background="#FF80AA",
+    foreground="black",
     font=(
         "Segoe UI",
         14,
     ),
 )
-
-
 # Create the treeview columns with the custom style
 tree.heading("#0", text="Name", anchor=tk.W)
 tree.heading("#1", text="Type", anchor=tk.W)
 tree.heading("#2", text="Size", anchor=tk.W)
 tree.heading("#3", text="Date Created", anchor=tk.W)
 tree.heading("#4", text="Date Modified", anchor=tk.W)
-
 # Set the column widths
 tree.column("#0", minwidth=200, width=400)
 tree.column("#1", minwidth=100, width=150)
 tree.column("#2", minwidth=100, width=150)
 tree.column("#3", minwidth=150, width=200)
 tree.column("#4", minwidth=150, width=200)
-
-# Create the treeview scrollbar
-scrollbar = ttk.Scrollbar(frame, orient=tk.VERTICAL, command=tree.yview)
-scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-tree.configure(yscrollcommand=scrollbar.set)
-
-
-# Sort the treeview items by clicking on the column headings (optional)
-def sort_column(tree, col, reverse):
-    # Get the list of items in the tree
-    items = [(tree.set(child, col), child) for child in tree.get_children("")]
-
-    # Sort the items based on the column value
-    items.sort(reverse=reverse)
-
-    for index, (val, child) in enumerate(items):
-        # Re-order the items in the tree
-        tree.move(child, "", index)
-
-    # Reverse the sort direction for the next click
-    tree.heading(col, command=lambda: sort_column(tree, col, not reverse))
-
 
 # Set the command for each column heading to sort the items
 tree.heading(
@@ -165,110 +145,87 @@ tree.heading(
 )
 
 
-# create class for menu items to be added to the right click menu (optional)
-class Menu:
-    def __init__(self, text, command):
-        self.text = text
-        self.command = command
+# Sort the treeview items by clicking on the column headings (optional)
+def sort_column(tree, col, reverse):
+    # Get the list of items in the tree
+    items = [(tree.set(child, col), child) for child in tree.get_children("")]
+    # Sort the items based on the column value
+    items.sort(reverse=reverse)
+    for index, (val, child) in enumerate(items):
+        # Re-order the items in the tree
+        tree.move(child, "", index)
+    # Reverse the sort direction for the next click
+    tree.heading(col, command=lambda: sort_column(tree, col, not reverse))
 
 
-# Create Menu for right click on treeview item (optional)
-def on_right_click(event):
-    # Select the item under the cursor
-    item = tree.identify("item", event.x, event.y)
-    tree.selection_set(item)
-
-    # Create a command create a new folder (optional)
-    def new_folder():
-        tree.insert(
-            item,
-            "end",
-            text="New Folder",
-            values=["folder", "", "", ""],
-            tags=("folder",),
-        )
-
-    # convert the treeview item to a dictionary
-    def treeview_to_dict(tree):
-        d = {tree.item(item)["text"]: {} for item in tree.get_children()}
-        for key, value in d.items():
-            # get the children of the item
-            children = tree.get_children(item)
-            if children:
-                d[key] = treeview_to_dict(tree)
-        return d
-
-    # Create a command to delete the selected item (optional)
-    def delete_item():
-        tree.delete(item)
-
-    # Create a command to rename the selected item (optional)
-
-    # Create a command to create a new file (optional)
-    def new_file():
-        tree.insert(
-            item,
-            "end",
-            text="New File",
-            values=["file", "", "", ""],
-            tags=("file",),
-        )
-
-    def rename_item():
-        tree.edit(item)
-
-    # create a command to show the properties of the selected item (optional)
-    def show_properties():
-        print("Properties")
-
-    # Display the menu
-    menu = tk.Menu(root, tearoff=0)
-    menu.add_command(label="New Folder", command=new_folder)
-    menu.add_command(label="New File", command=new_file)
-
-    menu.add_command(label="Delete", command=delete_item)
-    menu.add_command(label="Properties", command=show_properties)
-
-    menu.post(event.x_root, event.y_root)
-
-    # Save the input data to data_demo.py (optional)
+def clear_treeview():
+    for child in tree.get_children():
+        tree.delete(child)
 
 
-# Bind the right-click event to the treeview widget
-tree.bind("<Button-3>", on_right_click)
+def get_partition_size(choice):
+    try:
+        pt = disk_info.MBR(r"\\.\PhysicalDrive1")
+        partitions = pt.get_partitions()
+        ntfs_size = f"NTFS partition size: {partitions['NTFS'][1] / 1024 / 1024} MB"
+        fat32_size = f"FAT32 partition size: {partitions['FAT32'][1] / 1024 / 1024}  MB"
+        if choice == 1:
+            return ntfs_size
+        elif choice == 2:
+            return fat32_size
+    except disk_info.NoDiskFound:
+        return "No USB found"
 
 
-def get_items(tree, parent):
-    # Get the data from the treeview
-    items = []
-    for item in parent:
-        # Get the item's text and values
-        text = tree.item(item, "text")
-        values = tree.item(item, "values")
-        # Get the item's children
-        children = tree.get_children(item)
-        # Create a dictionary for the item's data
-        item_data = {
-            "text": text,
-            "values": values,
-            "contents": get_items(tree, children),
-        }
-        # Add the item's data to the list
-        items.append(item_data)
-    return items
+# STATUS BAR
+
+## Create a label widget to display the status message
+status_frame = tk.Frame(root)
+status_frame.pack(side=tk.TOP, fill=tk.X)
 
 
-# convert the treeview to a dictionary and save it to data_demo.py (optional)
-def save_data():
-    # Get the data from the treeview
-    data = get_items(tree, tree.get_children())
-    # Save the data to the filen
-    with open("data_demo.py", "w") as f:
-        f.write("data = " + str(data))
+def update_status_bar():
+    label1.config(text=get_partition_size(1))
+    label2.config(text=get_partition_size(2))
+    root.after(1000, update_status_bar)
 
 
-# Add the data to the tree
-add_items("", data)
+# Create a new frame for the status bar
+status_bar_frame = tk.Frame(root)
+status_bar_frame.pack(side=tk.TOP, fill=tk.X)
 
+# # Create a label widget to display the status message
+label1 = ttk.Label(status_bar_frame, text=get_partition_size(1))
+label2 = ttk.Label(status_bar_frame, text=get_partition_size(2))
+label1.pack(side=tk.TOP)
+label2.pack(side=tk.TOP)
+frame.pack(side=tk.TOP, fill=tk.BOTH)
+
+# BUTTONS
+
+# Add buttons to the existing button frame
+button_frame = tk.Frame(root)
+button_frame.pack(side=tk.BOTTOM, pady=10)
+
+ntfs_button = tk.Button(
+    button_frame, text="Load NTFS", command=lambda: add_items("", data_ntfs)
+)
+ntfs_button.pack(side=tk.LEFT, padx=10)
+
+fat32_button = tk.Button(
+    button_frame, text="Load FAT32", command=lambda: add_items("", data_fat32)
+)
+fat32_button.pack(side=tk.RIGHT, padx=10)
+
+# Add the "Quit" button to the buttons frame
+quit_button = tk.Button(button_frame, text="Quit", command=root.quit)
+quit_button.pack(side=tk.RIGHT, padx=10)
+
+clear_button = tk.Button(button_frame, text="Clear", command=clear_treeview)
+clear_button.pack(side=tk.RIGHT, padx=10)
+
+# Add the "Refresh" button to the buttons frame
+refresh_button = tk.Button(button_frame, text="Refresh", command=update_status_bar)
+refresh_button.pack(side=tk.RIGHT, padx=10)
 
 root.mainloop()
