@@ -131,7 +131,12 @@ class FAT32:
                         tempData['created'] = self.DIR_CrtDate + ' ' + self.DIR_CrtTime
                         tempData['modified'] = None
                         if (self.DIR_NxtClus != 0):
-                            tempData.update({'contents' : self.detectDIR(offset + (self.DIR_NxtClus - root) * self.BPB_BytesPerSec * self.BPB_SecPerClus, 64, self.DIR_NxtClus)})
+                            tempData.update({
+                                'contents' : 
+                                self.detectDIR(
+                                            offset + (self.DIR_NxtClus - root) * self.BPB_BytesPerSec * self.BPB_SecPerClus, 
+                                            64, self.DIR_NxtClus)
+                                            })
                             if (tempData['contents'] == {}):
                                 tempData.update({'contents' : None})
                         else:
