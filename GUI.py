@@ -1,10 +1,7 @@
-import subprocess
 import tkinter as tk
-import psutil
-import sys
 import json
 import tkinter.ttk as ttk
-import os
+import disk_info
 
 
 def import_data_ntfs(file_path):
@@ -13,7 +10,14 @@ def import_data_ntfs(file_path):
     return data_ntfs
 
 
+def import_data_fat32(file_path):
+    with open(file_path, "r") as file:
+        data_fat32 = json.load(file)
+    return data_fat32
+
+
 data_ntfs = import_data_ntfs("data_ntfs.txt")
+dat_fat32 = import_data_fat32("data_fat32.txt")
 
 
 # Load the data from data.txt into a Python dictionary
@@ -23,12 +27,30 @@ def read_data_ntfs():
     return data_ntfs
 
 
+def read_data_fat32():
+    with open("data_fat32.txt", "r") as j:
+        data_fat32 = eval(j.read())
+    return data_fat32
+
+
 data_ntfs = read_data_ntfs()
+data_fat32 = read_data_fat32()
+
 # Convert the Python dictionary to a JSON-formatted string
 json_data_ntfs = json.dumps(data_ntfs)
 # Write the JSON-formatted string to a new file
 with open("data_ntfs.json", "w") as f:
     f.write(json_data_ntfs)
+
+json_data_fat32 = json.dumps(data_fat32)
+# Write the JSON-formatted string to a new file
+with open("data_fat32.json", "w") as j:
+    j.write(json_data_fat32)
+
+
+root = tk.Tk()
+root.title("Disk Explorer")
+root.geometry("1200x300")
 
 
 def add_items(parent, items):
@@ -52,26 +74,8 @@ def add_items(parent, items):
         )
         if isinstance(value, dict):
             add_items(node, value.get("contents", {}))
-    # Configure the font for the treeview item's text
-    tree.tag_configure(
-        "folder",
-        font=(
-            "Segoe UI",
-            12,
-        ),
-    )
-    tree.tag_configure(
-        "file",
-        font=(
-            "Segoe UI",
-            12,
-        ),
-    )
 
 
-root = tk.Tk()
-root.title("Disk Explorer")
-root.geometry("1200x300")
 # Create a frame for the treeview widget
 frame = ttk.Frame(root)  # set the background color to blue
 frame.pack(fill=tk.BOTH, expand=1)
@@ -91,6 +95,7 @@ tree = ttk.Treeview(
     columns=("Type", "Size", "Date Created", "Date Modified"),
     selectmode="browse",
 )
+
 tree.pack(fill=tk.BOTH, expand=1)
 # Create a custom style for the heading
 style = ttk.Style(root)
@@ -116,20 +121,6 @@ tree.column("#2", minwidth=100, width=150)
 tree.column("#3", minwidth=150, width=200)
 tree.column("#4", minwidth=150, width=200)
 
-
-# Sort the treeview items by clicking on the column headings (optional)
-def sort_column(tree, col, reverse):
-    # Get the list of items in the tree
-    items = [(tree.set(child, col), child) for child in tree.get_children("")]
-    # Sort the items based on the column value
-    items.sort(reverse=reverse)
-    for index, (val, child) in enumerate(items):
-        # Re-order the items in the tree
-        tree.move(child, "", index)
-    # Reverse the sort direction for the next click
-    tree.heading(col, command=lambda: sort_column(tree, col, not reverse))
-
-
 # Set the command for each column heading to sort the items
 tree.heading(
     "#0", text="Name", anchor=tk.W, command=lambda: sort_column(tree, "#0", False)
@@ -154,63 +145,66 @@ tree.heading(
 )
 
 
+# Sort the treeview items by clicking on the column headings (optional)
+def sort_column(tree, col, reverse):
+    # Get the list of items in the tree
+    items = [(tree.set(child, col), child) for child in tree.get_children("")]
+    # Sort the items based on the column value
+    items.sort(reverse=reverse)
+    for index, (val, child) in enumerate(items):
+        # Re-order the items in the tree
+        tree.move(child, "", index)
+    # Reverse the sort direction for the next click
+    tree.heading(col, command=lambda: sort_column(tree, col, not reverse))
+
+
 def clear_treeview():
     for child in tree.get_children():
         tree.delete(child)
 
 
-usb_partitions = []
-
-# Get a list of all the partitions on the system
-partitions = psutil.disk_partitions()
-
-# Filter the partitions to only include those that are on a USB device
-for partition in partitions:
-    if "removable" in partition.opts:
-        usb_partitions.append(partition.mountpoint)
-
-# Create a status bar with the list of USB partitions
-status_bar = "USB partitions: "
-for partition in usb_partitions:
-    status_bar += partition + " "
-
-# Display the status bar
-os.system('echo "' + status_bar + '"')
+def get_partition_size(choice):
+    try:
+        pt = disk_info.MBR(r"\\.\PhysicalDrive1")
+        partitions = pt.get_partitions()
+        ntfs_size = f"NTFS partition size: {partitions['NTFS'][1] / 1024 / 1024} MB"
+        fat32_size = f"FAT32 partition size: {partitions['FAT32'][1] / 1024 / 1024}  MB"
+        if choice == 1:
+            return ntfs_size
+        elif choice == 2:
+            return fat32_size
+    except disk_info.NoDiskFound:
+        return "No USB found"
 
 
-def update_statusbar():
-    global statusbar
-    global data_ntfs
-    global data_fat32
+# STATUS BAR
 
-    # Calculate the total size and used size of the NTFS partition
-    total_ntfs = sum(value.get("size", 0) for value in data_ntfs.values())
-    used_ntfs = sum(
-        value.get("size", 0) for value in data_ntfs.values() if value.get("used", False)
-    )
-    ntfs_status = f"NTFS Partition: {used_ntfs/total_ntfs*100:.2f}% Used"
-
-    # # Calculate the total size and used size of the FAT32 partition
-    # total_fat32 = sum(value.get("size", 0) for value in data_fat32.values())
-    # used_fat32 = sum(
-    #     value.get("size", 0)
-    #     for value in data_fat32.values()
-    #     if value.get("used", False)
-    # )
-    # fat32_status = f"FAT32 Partition: {used_fat32/total_fat32*100:.2f}% Used"
-
-    # Update the statusbar with the partition statuses
-    statusbar["text"] = f"{ntfs_status} "
+## Create a label widget to display the status message
+status_frame = tk.Frame(root)
+status_frame.pack(side=tk.TOP, fill=tk.X)
 
 
-# Create the Clear button
+def update_status_bar():
+    label1.config(text=get_partition_size(1))
+    label2.config(text=get_partition_size(2))
+    root.after(1000, update_status_bar)
 
 
-# Place the button on the bottom right side of the frame
+# Create a new frame for the status bar
+status_bar_frame = tk.Frame(root)
+status_bar_frame.pack(side=tk.TOP, fill=tk.X)
 
+# # Create a label widget to display the status message
+label1 = ttk.Label(status_bar_frame, text=get_partition_size(1))
+label2 = ttk.Label(status_bar_frame, text=get_partition_size(2))
+label1.pack(side=tk.TOP)
+label2.pack(side=tk.TOP)
+frame.pack(side=tk.TOP, fill=tk.BOTH)
 
-# Create a frame for the buttons
-button_frame = ttk.Frame(root)
+# BUTTONS
+
+# Add buttons to the existing button frame
+button_frame = tk.Frame(root)
 button_frame.pack(side=tk.BOTTOM, pady=10)
 
 ntfs_button = tk.Button(
@@ -218,48 +212,20 @@ ntfs_button = tk.Button(
 )
 ntfs_button.pack(side=tk.LEFT, padx=10)
 
-fat32_button = tk.Button(button_frame, text="Load FAT32")
+fat32_button = tk.Button(
+    button_frame, text="Load FAT32", command=lambda: add_items("", data_fat32)
+)
 fat32_button.pack(side=tk.RIGHT, padx=10)
 
-# Add the "Refresh" button to the buttons frame
-refresh_button = ttk.Button(button_frame, text="Refresh", command=update_statusbar)
-refresh_button.pack(side=tk.LEFT, padx=5, pady=5)
-
 # Add the "Quit" button to the buttons frame
-quit_button = ttk.Button(button_frame, text="Quit", command=root.quit)
-quit_button.pack(side=tk.RIGHT, padx=5, pady=5)
+quit_button = tk.Button(button_frame, text="Quit", command=root.quit)
+quit_button.pack(side=tk.RIGHT, padx=10)
 
-clear_button = ttk.Button(button_frame, text="Clear", command=clear_treeview)
-clear_button.pack(side=tk.RIGHT, padx=5, pady=5)
+clear_button = tk.Button(button_frame, text="Clear", command=clear_treeview)
+clear_button.pack(side=tk.RIGHT, padx=10)
 
-# Create the status bar, modify the status bar to include the USB partitions and the NTFS and FAT32 partition statuses (optional)
-status_bar = ttk.Label(root, text=status_bar, relief=tk.SUNKEN, anchor=tk.W)
-status_bar.pack(side=tk.BOTTOM, fill=tk.X)
-
-
-# Add the NTFS status label to the status bar
-ntfs_status = tk.StringVar()
-ntfs_status.set("USB Format")
-ntfs_label = ttk.Label(status_bar, textvariable=ntfs_status)
-ntfs_label.pack(side=tk.LEFT)
-
-
-# Add the FAT32 status label to the status bar
-fat32_status = tk.StringVar()
-fat32_status.set("FAT32: -")
-fat32_label = ttk.Label(status_bar, textvariable=fat32_status)
-fat32_label.pack(side=tk.RIGHT)
-
-
-#     # Update the status bar every 1 second
-#     root.after(1000, update_statusbar)
-#     # Create the status bar
-
-
-# create_statusbar(root)
-# Create the buttons frame
-buttons_frame = ttk.Frame(root)
-buttons_frame.pack(side=tk.BOTTOM)
-
+# Add the "Refresh" button to the buttons frame
+refresh_button = tk.Button(button_frame, text="Refresh", command=update_status_bar)
+refresh_button.pack(side=tk.RIGHT, padx=10)
 
 root.mainloop()
