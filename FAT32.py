@@ -233,9 +233,9 @@ class FAT32:
             for i in range(0, len(self.detectDIR(offset, 128, self.BPB_RootClus)), 1):
                 self.info_dict.update({i: self.detectDIR(offset, 128, self.BPB_RootClus)[i]})
 
-    def Entry(self)->None:
+    def getEntry(self)->None:
         return self.info_dict
-    def BootSector(self):
+    def getBootSector(self):
         temp_dict = {
                 'StartingOffset': self.starting_offset,
                 'BPB_BytesPerSec': self.BPB_BytesPerSec,
@@ -247,15 +247,22 @@ class FAT32:
                 'BPB_RootClus': self.BPB_RootClus,
                 }
         return temp_dict
+    
 
-DRIVE = FAT32(0, '\\\\.\G:')
-DRIVE.readBootSector()
+#####################
+DRIVE = FAT32(0, '\\\\.\G:') #change the drive letter here
 
+DRIVE.readBootSector() #read the boot sector -> get the starting offset. Noted this is the compulsary step
 
-print('-------------------------------------------------------')
-RDET = (DRIVE.BootSector()['BPB_RsvdSecCnt'] + DRIVE.BootSector()['BPB_NumFATs'] * DRIVE.BootSector()['BPB_SecsPerFAT'] 
-+ DRIVE.BootSector()['StartingOffset']) * DRIVE.BootSector()['BPB_BytesPerSec']
+RDET = (
+        DRIVE.getBootSector()['BPB_RsvdSecCnt'] +           #calculate the Root Directory Entry Table
+        DRIVE.getBootSector()['BPB_NumFATs'] *              #RDET = Reserved Sector Count + Number of FATs * Sectors per FAT + Starting Offset
+        DRIVE.getBootSector()['BPB_SecsPerFAT'] + 
+        DRIVE.getBootSector()['StartingOffset']
+        ) * DRIVE.getBootSector()['BPB_BytesPerSec'] 
 
-DRIVE.FindDirectory(RDET, DRIVE.BootSector()['BPB_RootClus'])
-DATA = DRIVE.Entry()
-print(DATA)
+DRIVE.FindDirectory(RDET, DRIVE.getBootSector()['BPB_RootClus']) #find the directory of FAT32 drive
+
+DATA = DRIVE.getEntry() #get the data of the directory
+
+print(DATA) #print the data in dictionary format
