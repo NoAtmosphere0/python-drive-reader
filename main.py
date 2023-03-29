@@ -1,6 +1,7 @@
 import NTFS
 import disk_info
 import FAT32
+import GUI
 
 
 def main():
@@ -10,7 +11,6 @@ def main():
     physical_drive = r"\\.\PhysicalDrive1"
     #! This path should be PhysicalDrive1 in the final version
 
-
     """"Testing the partition table class"""
     #pt = disk_info.MBR(disk_info_path)
     #info_dict = pt.getInfoDict()
@@ -18,9 +18,9 @@ def main():
     #print(info_dict)
 
     """"Testing the NTFS class"""
-    ntfs = NTFS.NTFS(0, ntfs_path)
-    
-    ntfs.print_entries()
+    # ntfs = NTFS.NTFS(0, ntfs_path)
+
+    # ntfs.print_entries()
 
     print("Exiting main()")
 
