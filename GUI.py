@@ -1,197 +1,231 @@
-import os
-import time
 import tkinter as tk
-from tkinter import filedialog
-from tkinter import messagebox
-from disk_info import MBR, partition_table
-from FAT32 import FAT32
-from NTFS import NTFS
+import json
+import tkinter.ttk as ttk
+import disk_info
 
 
-class FileExplorer:
-    def __init__(self, master):
-        self.master = master
-        self.master.title("PYTHON DRIVE READER")
+def import_data_ntfs(file_path):
+    with open(file_path, "r") as file:
+        data_ntfs = json.load(file)
+    return data_ntfs
 
-        # Create the directory path label
-        self.dir_label = tk.Label(self.master, text="Directory Path:")
-        self.dir_label.grid(row=0, column=0)
 
-        # Create the directory path entry widget
-        self.dir_entry = tk.Entry(self.master, width=50)
-        self.dir_entry.grid(row=0, column=1)
+def import_data_fat32(file_path):
+    with open(file_path, "r") as file:
+        data_fat32 = json.load(file)
+    return data_fat32
 
-        # Create the browse button
-        self.browse_button = tk.Button(
-            self.master, text="Browse", command=self.browse_directory)
-        self.browse_button.grid(row=0, column=2)
 
-        # Create the file listbox
-        self.file_listbox = tk.Listbox(self.master, width=70)
-        self.file_listbox.grid(row=1, column=0, columnspan=3)
+data_ntfs = import_data_ntfs("data_ntfs.txt")
+dat_fat32 = import_data_fat32("data_fat32.txt")
 
-        # Set up the file listbox scrollbar
-        self.file_scrollbar = tk.Scrollbar(self.master, orient=tk.VERTICAL)
-        self.file_scrollbar.grid(row=1, column=3, sticky="NS")
-        self.file_listbox.config(yscrollcommand=self.file_scrollbar.set)
-        self.file_scrollbar.config(command=self.file_listbox.yview)
 
-        # Populate the file listbox with the files in the initial directory
-        self.current_directory = os.getcwd()
-        self.populate_file_listbox(self.current_directory)
-       
-    
-    def open_file(self, file_path):
-        try:
-            with open(file_path, 'r') as f:
-                contents = f.read()
-            return contents
-        except Exception as e:
-            print(f"Error opening file: {e}")
-            return None
-        
-    def populate_file_listbox(self, directory):
-        # Clear the file listbox
-        self.file_listbox.delete(0, tk.END)
+# Load the data from data.txt into a Python dictionary
+def read_data_ntfs():
+    with open("data_ntfs.txt", "r") as f:
+        data_ntfs = eval(f.read())
+    return data_ntfs
 
-        # Get a list of the files in the directory
-        files = os.listdir(directory)
 
-        # Add each file to the file listbox
-        for file in files:
-            self.file_listbox.insert(tk.END, file)
+def read_data_fat32():
+    with open("data_fat32.txt", "r") as j:
+        data_fat32 = eval(j.read())
+    return data_fat32
 
-    def get_click_path(self):
-        # Get the index of the selected file
-        selected_index = self.file_listbox.curselection()[0]
 
-        # Get the name of the selected file
-        selected_file = self.file_listbox.get(selected_index)
+data_ntfs = read_data_ntfs()
+data_fat32 = read_data_fat32()
 
-        # Get the full path of the selected file
-        selected_path = os.path.join(self.current_directory, selected_file)
+# Convert the Python dictionary to a JSON-formatted string
+json_data_ntfs = json.dumps(data_ntfs)
+# Write the JSON-formatted string to a new file
+with open("data_ntfs.json", "w") as f:
+    f.write(json_data_ntfs)
 
-        return selected_path
+json_data_fat32 = json.dumps(data_fat32)
+# Write the JSON-formatted string to a new file
+with open("data_fat32.json", "w") as j:
+    j.write(json_data_fat32)
 
-    def double_clicked(self, event):
-        path = self.get_click_path()
-        if os.path.isdir(path):
-            self.populate_file_listbox(path)
-        else:
-            self.open_file(path)
 
-            self.dictionary_data = {
-                "filename": {
-                    "type": "file",
-                    "size": 1234,
-                    "created": "2022-01-01 12:34:56",
-                    "modified": "2022-02-02 23:45:01"
-                },
-                "foldername": {
-                    "type": "folder",
-                    "created": "2022-01-01 12:34:56",
-                    "modified": "2022-02-02 23:45:01",
-                    "contents": {
-                        "filename": {
-                            "type": "file",
-                            "size": 5678,
-                            "created": "2022-01-02 12:34:56",
-                            "modified": "2022-02-03 23:45:01"
-                        },
-                        "subfoldername": {
-                            "type": "folder",
-                            "created": "2022-01-03 12:34:56",
-                            "modified": "2022-02-04 23:45:01",
-                            "contents": {
-                                "filename": {
-                                    "type": "file",
-                                    "size": 91011,
-                                    "created": "2022-01-04 12:34:56",
-                                    "modified": "2022-02-05 23:45:01"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-    def browse_directory(self):
-        files = []
-        directories = []
-        
-        for filename in os.listdir(self.path):
-            full_path = os.path.join(self.path, filename)
-            if os.path.isdir(full_path):
-                directories.append(filename)
-            else:
-                files.append(filename)
-        
-        print("Files:")
-        for file in files:
-            print(file)
-        
-        print("\nDirectories:")
-        for directory in directories:
-            print(directory)
-        # Open a file dialog to allow the user to select a directory
-        selected_directory = filedialog.askdirectory()
-
-        if selected_directory:
-            # Update the directory path entry widget and current directory variable
-            self.dir_entry.delete(0, tk.END)
-            self.dir_entry.insert(0, selected_directory)
-
-            self.current_directory = selected_directory
-
-        self.dictionary_data = {
-            "filename": {
-                "type": "file",
-                "size": 1234,
-                "created": "2022-01-01 12:34:56",
-                "modified": "2022-02-02 23:45:01"
-            },
-            "foldername": {
-                "type": "folder",
-                "created": "2022-01-01 12:34:56",
-                "modified": "2022-02-02 23:45:01",
-                "contents": {
-                    "filename": {
-                        "type": "file",
-                        "size": 5678,
-                        "created": "2022-01-02 12:34:56",
-                        "modified": "2022-02-03 23:45:01"
-                    },
-                    "subfoldername": {
-                        "type": "folder",
-                        "created": "2022-01-03 12:34:56",
-                        "modified": "2022-02-04 23:45:01",
-                        "contents": {
-                            "filename": {
-                                "type": "file",
-                                "size": 91011,
-                                "created": "2022-01-04 12:34:56",
-                                "modified": "2022-02-05 23:45:01"
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    #create a def display_dic which display the dictionary and display data of the dictionary
-    def display_dict(dict_data, text_widget, indent=0):
-        for key, value in dict_data.items():
-        # Indent the key-value pairs to show the nesting
-            text_widget.insert(tk.END, " " * indent + str(key) + ": ")
-            if isinstance(value, dict):
-                text_widget.insert(tk.END, "\n")
-
-                display_dict(value, text_widget, indent+4)
-            else:
-                text_widget.insert(tk.END, str(value) + "\n")
-    def dis_data(self):
-        self.text.delete(1.0, tk.END)
-        self.display_dict(self.dictionary_data, self.text)   
-# Create the application window and start the main event loop
 root = tk.Tk()
-app = FileExplorer(root)
+root.title("Disk Explorer")
+root.geometry("1200x300")
+
+
+def add_items(parent, items):
+    for key, value in items.items():
+        tags = ()
+        if value.get("type") == "folder":
+            tags = ("folder",)
+        if value.get("type") == "file":
+            tags = ("file",)
+        node = tree.insert(
+            parent,
+            "end",
+            text=key,
+            values=[
+                value.get("type", ""),
+                value.get("size", ""),
+                value.get("created", ""),
+                value.get("modified", ""),
+            ],
+            tags=tags,
+        )
+        if isinstance(value, dict):
+            add_items(node, value.get("contents", {}))
+
+
+# Create a frame for the treeview widget
+frame = ttk.Frame(root)  # set the background color to blue
+frame.pack(fill=tk.BOTH, expand=1)
+# modify the frame to add a scrollbar
+frame.grid_rowconfigure(0, weight=1)
+frame.grid_columnconfigure(0, weight=1)
+# create a custom style for the frame
+style = ttk.Style(root)
+style.configure(
+    "Frame",
+    background="#00FFFF",
+    foreground="darkblue",
+)
+# Create a treeview widget
+tree = ttk.Treeview(
+    frame,
+    columns=("Type", "Size", "Date Created", "Date Modified"),
+    selectmode="browse",
+)
+
+tree.pack(fill=tk.BOTH, expand=1)
+# Create a custom style for the heading
+style = ttk.Style(root)
+style.configure(
+    "Treeview.Heading",
+    background="#FF80AA",
+    foreground="black",
+    font=(
+        "Segoe UI",
+        14,
+    ),
+)
+# Create the treeview columns with the custom style
+tree.heading("#0", text="Name", anchor=tk.W)
+tree.heading("#1", text="Type", anchor=tk.W)
+tree.heading("#2", text="Size", anchor=tk.W)
+tree.heading("#3", text="Date Created", anchor=tk.W)
+tree.heading("#4", text="Date Modified", anchor=tk.W)
+# Set the column widths
+tree.column("#0", minwidth=200, width=400)
+tree.column("#1", minwidth=100, width=150)
+tree.column("#2", minwidth=100, width=150)
+tree.column("#3", minwidth=150, width=200)
+tree.column("#4", minwidth=150, width=200)
+
+# Set the command for each column heading to sort the items
+tree.heading(
+    "#0", text="Name", anchor=tk.W, command=lambda: sort_column(tree, "#0", False)
+)
+tree.heading(
+    "#1", text="Type", anchor=tk.W, command=lambda: sort_column(tree, "#1", False)
+)
+tree.heading(
+    "#2", text="Size", anchor=tk.W, command=lambda: sort_column(tree, "#2", False)
+)
+tree.heading(
+    "#3",
+    text="Date Created",
+    anchor=tk.W,
+    command=lambda: sort_column(tree, "#3", False),
+)
+tree.heading(
+    "#4",
+    text="Date Modified",
+    anchor=tk.W,
+    command=lambda: sort_column(tree, "#4", False),
+)
+
+
+# Sort the treeview items by clicking on the column headings (optional)
+def sort_column(tree, col, reverse):
+    # Get the list of items in the tree
+    items = [(tree.set(child, col), child) for child in tree.get_children("")]
+    # Sort the items based on the column value
+    items.sort(reverse=reverse)
+    for index, (val, child) in enumerate(items):
+        # Re-order the items in the tree
+        tree.move(child, "", index)
+    # Reverse the sort direction for the next click
+    tree.heading(col, command=lambda: sort_column(tree, col, not reverse))
+
+
+def clear_treeview():
+    for child in tree.get_children():
+        tree.delete(child)
+
+
+def get_partition_size(choice):
+    try:
+        pt = disk_info.MBR(r"\\.\PhysicalDrive1")
+        partitions = pt.get_partitions()
+        ntfs_size = f"NTFS partition size: {partitions['NTFS'][1] / 1024 / 1024} MB"
+        fat32_size = f"FAT32 partition size: {partitions['FAT32'][1] / 1024 / 1024}  MB"
+        if choice == 1:
+            return ntfs_size
+        elif choice == 2:
+            return fat32_size
+    except disk_info.NoDiskFound:
+        return "No USB found"
+
+
+# STATUS BAR
+
+## Create a label widget to display the status message
+status_frame = tk.Frame(root)
+status_frame.pack(side=tk.TOP, fill=tk.X)
+
+
+def update_status_bar():
+    label1.config(text=get_partition_size(1))
+    label2.config(text=get_partition_size(2))
+    root.after(1000, update_status_bar)
+
+
+# Create a new frame for the status bar
+status_bar_frame = tk.Frame(root)
+status_bar_frame.pack(side=tk.TOP, fill=tk.X)
+
+# # Create a label widget to display the status message
+label1 = ttk.Label(status_bar_frame, text=get_partition_size(1))
+label2 = ttk.Label(status_bar_frame, text=get_partition_size(2))
+label1.pack(side=tk.TOP)
+label2.pack(side=tk.TOP)
+frame.pack(side=tk.TOP, fill=tk.BOTH)
+
+# BUTTONS
+
+# Add buttons to the existing button frame
+button_frame = tk.Frame(root)
+button_frame.pack(side=tk.BOTTOM, pady=10)
+
+ntfs_button = tk.Button(
+    button_frame, text="Load NTFS", command=lambda: add_items("", data_ntfs)
+)
+ntfs_button.pack(side=tk.LEFT, padx=10)
+
+fat32_button = tk.Button(
+    button_frame, text="Load FAT32", command=lambda: add_items("", data_fat32)
+)
+fat32_button.pack(side=tk.RIGHT, padx=10)
+
+# Add the "Quit" button to the buttons frame
+quit_button = tk.Button(button_frame, text="Quit", command=root.quit)
+quit_button.pack(side=tk.RIGHT, padx=10)
+
+clear_button = tk.Button(button_frame, text="Clear", command=clear_treeview)
+clear_button.pack(side=tk.RIGHT, padx=10)
+
+# Add the "Refresh" button to the buttons frame
+refresh_button = tk.Button(button_frame, text="Refresh", command=update_status_bar)
+refresh_button.pack(side=tk.RIGHT, padx=10)
+
 root.mainloop()
