@@ -1,1 +1,76 @@
-{"0": {"name": "R\u0000e\u0000f\u0000_\u0000B\u0000T\u0000_\u0000F\u0000A\u0000T\u00001\u0000.\u0000p\u0000d\u0000f\u0000", "type": "file", "created": "03/13/2023 16:13:30", "modified": null, "size": 457965}, "1": {"name": "R\u0000e\u0000f\u0000_\u0000B\u0000T\u0000_\u0000F\u0000A\u0000T\u00002\u0000.\u0000p\u0000d\u0000f\u0000", "type": "file", "created": "03/13/2023 16:13:31", "modified": null, "size": 727716}, "2": {"name": "R\u0000e\u0000f\u0000_\u0000B\u0000T\u0000_\u0000N\u0000T\u0000F\u0000S\u0000.\u0000p\u0000d\u0000f\u0000", "type": "file", "created": "03/13/2023 16:13:31", "modified": null, "size": 577747}, "3": {"name": "R\u0000e\u0000f\u0000_\u0000F\u0000A\u0000T\u0000.\u0000p\u0000d\u0000f\u0000", "type": "file", "created": "03/13/2023 16:13:32", "modified": null, "size": 178413}}
+{
+    "slides": {
+        "type": "folder",
+        "created": "2023-03-13 12:34:56",
+        "modified": "2022-03-13 23:45:01",
+        "contents": {
+            "OS_C0_Course Introduction.ppt": {
+                "type": "file",
+                "size": 1960960,
+                "created": "2023-03-13 12:34:56",
+                "modified": "2022-03-13 23:45:01"
+            },
+            "OS_C1_Introduction to OS.ppt": {
+                "type": "file",
+                "size": 3832832,
+                "created": "2023-03-13 12:34:56",
+                "modified": "2022-03-13 23:45:01"
+            },
+            "OS_C2A_Process_IPC.ppt": {
+                "type": "file",
+                "size": 2604032,
+                "created": "2023-03-13 12:34:56",
+                "modified": "2022-03-13 23:45:01"
+            },
+            "OS_C2B_Scheduling.ppt": {
+                "type": "file",
+                "size": 1651712,
+                "created": "2023-03-13 12:34:56",
+                "modified": "2022-03-13 23:45:01"
+            }
+        }
+    },
+    "text": {
+        "type": "folder",
+        "created": "2022-01-01 12:34:56",
+        "modified": "2022-02-02 23:45:01",
+        "contents": {
+            "random text.txt": {
+                "type": "file",
+                "size": 1024,
+                "created": "2022-01-02 12:34:56",
+                "modified": "2022-02-03 23:45:01"
+            }
+        }
+    },
+    "Ref_BT_FAT1.pdf": {
+        "type": "file",
+        "size": 458752,
+        "created": "2022-01-02 12:34:56",
+        "modified": "2022-02-03 23:45:01"
+    },
+    "Ref_BT_FAT2.pdf": {
+        "type": "file",
+        "size": 728064,
+        "created": "2022-01-02 12:34:56",
+        "modified": "2022-02-03 23:45:01"
+    },
+    "Ref_BT_NTFS.pdf": {
+        "type": "file",
+        "size": 578560,
+        "created": "2022-01-02 12:34:56",
+        "modified": "2022-02-03 23:45:01"
+    },
+    "Ref_FAT.pdf": {
+        "type": "file",
+        "size": 179200,
+        "created": "2022-01-02 12:34:56",
+        "modified": "2022-02-03 23:45:01"
+    },
+    "Ref_NTFS.pdf": {
+        "type": "file",
+        "size": 90112,
+        "created": "2022-01-02 12:34:56",
+        "modified": "2022-02-03 23:45:01"
+    }
+}
