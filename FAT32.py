@@ -30,6 +30,7 @@ class FAT32:
 
     def readBootSector(self) -> None:
         with open(self.drive_path, "rb") as f:
+            f.read(self.starting_offset)
             self.byte = f.read(512)
             self.BPB_BytesPerSec = int.from_bytes(self.byte[11:13], byteorder="little")
             self.BPB_SecPerClus = int.from_bytes(self.byte[13:14], byteorder="little")
@@ -354,7 +355,8 @@ class FAT32:
     "partitions": {"NTFS": [65536, 536870912], "FAT32": [536936448, 536870912]},
 }
 """
-DRIVE = FAT32(536936448, r"\\.\PhysicalDrive1")
+fat32_bin_path = r"C:\Users\pkhoa\Documents\Operating System\Partition data-20230316T151812Z-001\Partition data\bin_FAT32_Partition2.bin"
+DRIVE = FAT32(0, fat32_bin_path)
 # change the drive letter here
 
 DRIVE.readBootSector()  # read the boot sector -> get the starting offset. Noted this is the compulsary step
