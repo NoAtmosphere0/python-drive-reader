@@ -72,6 +72,12 @@ class NTFS:
         
         self.readMFT()
 
+    def change_index(self, dict):
+        new_order = ["type", "size", "created", "modified"] 
+        new_dict = {key: dict[key] for key in new_order}
+
+        return new_dict       
+
     def readMFT(self):
         with open(self.drive_path, 'rb') as f:
             # Read the MFT
@@ -82,8 +88,14 @@ class NTFS:
                 if entry[0:4] != b"FILE" and entry[0:4] != b"BAAD": # If the entry is not a file or a bad entry,
                     break
                 entry_dict = self.readEntry(entry)
-                print(entry_dict)
-                self.entries[entry_dict["name"]] = entry_dict["name"].values()
+                if (len(entry_dict) == 5):
+                    filename = entry_dict["name"]
+                    entry_dict = self.change_index(entry_dict)
+                    
+                    self.entries[filename] = entry_dict
+                else:
+                    continue
+                
 
     def readEntry(self, entry):
         entry_dict = {}
@@ -108,8 +120,8 @@ class NTFS:
                 attribute_content = attributes[current + attribute_content_offset:current + attribute_content_offset + attribute_content_size]
                 created = attribute_content[0x00:0x08]
                 modified = attribute_content[0x08:0x16]
-                entry_dict["created_time"] = self.convert_time(struct.unpack("<Q", created)[0])
-                entry_dict["modified_time"] = self.convert_time(struct.unpack("<Q", attribute_content[8:16])[0])
+                entry_dict["created"] = self.convert_time(struct.unpack("<Q", created)[0])
+                entry_dict["modified"] = self.convert_time(struct.unpack("<Q", attribute_content[8:16])[0])
 
             elif attribute_type == 0x30 or attribute_type == 48: # File Name
                 attribute_content = attributes[current + attribute_content_offset:current + attribute_content_offset + attribute_content_size * 2]
@@ -201,9 +213,23 @@ class NTFS:
 
     def print_entries(self):
         for entry in self.entries:
-            print(entry)     
+            print(entry + ": " + str(self.entries[entry]))     
         print(f"Number of entries: {len(self.entries)}")	
+
+    def get_entries(self):
+        return self.entries
     
+    def get_entries_text(self):
+        with open("data_ntfs.txt", 'w') as f:
+            f.write(str(self.entries))
+        self.format_data_file()
+
+    def format_data_file(self):
+        with open("data_ntfs.txt", 'r') as f:
+            text = f.read().replace("'", '"')
+        with open("data_ntfs.txt", 'w') as f:
+            f.write(text)
+            
 
         
 

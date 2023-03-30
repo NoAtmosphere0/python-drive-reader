@@ -17,7 +17,7 @@ def import_data_fat32(file_path):
 
 
 data_ntfs = import_data_ntfs("data_ntfs.txt")
-data_fat32 = import_data_fat32("data_fat32.txt")
+#data_fat32 = import_data_fat32("data_fat32.txt")
 
 
 # Load the data from data.txt into a Python dictionary
@@ -27,14 +27,14 @@ def read_data_ntfs():
     return data_ntfs
 
 
-def read_data_fat32():
-    with open("data_fat32.txt", "r") as j:
-        data_fat32 = eval(j.read())
-    return data_fat32
+# def read_data_fat32():
+#     with open("data_fat32.txt", "r") as j:
+#         data_fat32 = eval(j.read())
+#     return data_fat32
 
 
 data_ntfs = read_data_ntfs()
-data_fat32 = read_data_fat32()
+#data_fat32 = read_data_fat32()
 
 # Convert the Python dictionary to a JSON-formatted string
 json_data_ntfs = json.dumps(data_ntfs)
@@ -42,10 +42,11 @@ json_data_ntfs = json.dumps(data_ntfs)
 with open("data_ntfs.json", "w") as f:
     f.write(json_data_ntfs)
 
-json_data_fat32 = json.dumps(data_fat32)
+#json_data_fat32 = json.dumps(data_fat32)
 # Write the JSON-formatted string to a new file
-with open("data_fat32.json", "w") as j:
-    j.write(json_data_fat32)
+
+# with open("data_fat32.json", "w") as j:
+#     j.write(json_data_fat32)
 
 
 root = tk.Tk()
@@ -165,7 +166,7 @@ def clear_treeview():
 
 def get_partition_size(choice):
     try:
-        pt = disk_info.MBR(r"\\.\PhysicalDrive1")
+        pt = disk_info.MBR(r"bin_files\disk_information.bin")
         partitions = pt.get_partitions()
         ntfs_size = f"NTFS partition size: {partitions['NTFS'][1] / 1024 / 1024} MB"
         fat32_size = f"FAT32 partition size: {partitions['FAT32'][1] / 1024 / 1024}  MB"
