@@ -73,7 +73,7 @@ class NTFS:
         self.readMFT()
 
     def change_index(self, dict):
-        new_order = ['type', 'size', 'created', 'modified'] 
+        new_order = ["type", "size", "created", "modified"] 
         new_dict = {key: dict[key] for key in new_order}
 
         return new_dict       
@@ -222,7 +222,14 @@ class NTFS:
     def get_entries_text(self):
         with open("data_ntfs.txt", 'w') as f:
             f.write(str(self.entries))
-    
+        self.format_data_file()
+
+    def format_data_file(self):
+        with open("data_ntfs.txt", 'r') as f:
+            text = f.read().replace("'", '"')
+        with open("data_ntfs.txt", 'w') as f:
+            f.write(text)
+            
 
         
 
