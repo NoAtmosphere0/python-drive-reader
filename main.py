@@ -19,9 +19,12 @@ def main():
     print(info_dict)
 
     """"Testing the NTFS class"""
-    # ntfs = NTFS.NTFS(0, ntfs_path)
+    ntfs = NTFS.NTFS(0, ntfs_path)
 
-    # ntfs.print_entries()
+    #ntfs.print_entries()
+    print(ntfs.get_entries())
+
+    ntfs.get_entries_text()
 
     print("Exiting main()")
 
