@@ -1,6 +1,7 @@
 import NTFS
 import disk_info
-import FAT32
+
+# import FAT32
 import GUI
 
 

@@ -284,7 +284,7 @@ class FAT32:
                         seconds = (int_value >> 7) & 0x3F
                         milliseconds = int_value & 0x7F
                         self.DIR_CrtTime = datetime.time(
-                            hours, minutes, seconds, milliseconds * 10000
+                            hours, minutes, seconds, milliseconds * 1000
                         )
                         self.DIR_CrtTime = self.DIR_CrtTime.strftime("%H:%M:%S")
                         ################
@@ -346,10 +346,16 @@ class FAT32:
 
 
 #####################
-DRIVE = FAT32(
-    0,
-    r"C:\Users\pkhoa\Documents\Operating System\Partition data-20230316T151812Z-001\Partition data\bin_FAT32_Partition2.bin",
-)  # change the drive letter here
+"""
+{
+    "partition_type": "0xbc",
+    "starting_sector": 525338448,
+    "Disk size": "992.8670635223389 MB",
+    "partitions": {"NTFS": [65536, 536870912], "FAT32": [536936448, 536870912]},
+}
+"""
+DRIVE = FAT32(536936448, r"\\.\PhysicalDrive1")
+# change the drive letter here
 
 DRIVE.readBootSector()  # read the boot sector -> get the starting offset. Noted this is the compulsary step
 
@@ -370,7 +376,7 @@ DRIVE.FindDirectory(
 
 DATA = DRIVE.getEntry()  # get the data of the directory
 
-# with open("data_fat32.txt", "w") as cac:
-#     cac.write(str(DATA))  # write the data to a text file
+with open("data_fat32.txt", "w") as cac:
+    cac.write(str(DATA))  # write the data to a text file
 
 print(DATA)  # print the data in dictionary format
