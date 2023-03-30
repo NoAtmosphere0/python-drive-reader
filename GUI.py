@@ -17,7 +17,7 @@ def import_data_fat32(file_path):
 
 
 data_ntfs = import_data_ntfs("data_ntfs.txt")
-dat_fat32 = import_data_fat32("data_fat32.txt")
+data_fat32 = import_data_fat32("data_fat32.txt")
 
 
 # Load the data from data.txt into a Python dictionary
