@@ -62,7 +62,7 @@ class MBR:
     def _loadInfo(self):
         self.info_dict["partition_type"] = self.partition_type
         self.info_dict["starting_sector"] = self.starting_sector
-        self.info_dict["total_sectors"] = self.total_sectors
+        self.info_dict["Disk size"] = f"{self.total_sectors * 512 / 1024 / 1024 / 1024 } MB"
         self.info_dict["partitions"] = self.partitions
 
     def _readPT(self):  # Reads the partition table
