@@ -337,7 +337,7 @@ class FAT32:
                 }
         return temp_dict
 
-def print_data_to_file(data, filename):
+def print_data_to_file(data, filename): 
     with open(filename, 'w') as file:
         for key, value in data.items():
             file.write(f'{key}: ')
@@ -362,7 +362,6 @@ def print_to_json(data, filename):
 def format_dict(input_dict):
     if input_dict is None:
         return None
-    
     output_dict = {}
     for key, value in input_dict.items():
         name = value["name"]
@@ -372,8 +371,15 @@ def format_dict(input_dict):
             del value["contents"]
             value["size"] = None
             value["contents"] = format_dict(contents)
+            if value["contents"] is None:
+                value["contents"] = 'Empty'
         output_dict[name] = value
+    #pop size from folders
+    for key, value in output_dict.items():
+        if value["type"] == "folder":
+            value.pop("size", None)
     return output_dict
+
 
 #####################
 DRIVE = FAT32(0, '\\\\.\F:') #change the drive letter here
@@ -388,6 +394,5 @@ RDET = (
 DRIVE.FindDirectory(RDET) #find the directory of FAT32 drive
 DATA = DRIVE.getDATA() #get the data of the directory
 
-#print(DATA) #print the data
-print_to_json(format_dict(DATA), 'data_fat32.json') #print the data in json format
+print_to_json(format_dict(DATA), 'data_fat32.txt') #print the data in json format
 
