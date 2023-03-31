@@ -167,7 +167,7 @@ def main():
 
     def get_partition_size(choice):
         try:
-            pt = disk_info.MBR(r"bin_files\disk_information.bin")
+            pt = disk_info.MBR(r"\\.\PhysicalDrive1")
             partitions = pt.get_partitions()
             ntfs_size = f"NTFS partition size: {partitions['NTFS'][1] / 1024 / 1024} MB"
             fat32_size = f"FAT32 partition size: {partitions['FAT32'][1] / 1024 / 1024}  MB"
