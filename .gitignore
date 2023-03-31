@@ -135,3 +135,10 @@ bin_files/bin_NTFS_Partition1.bin
 bin_files/bin_FAT32_Partition2.bin
 
 tempCodeRunnerFile.py
+
+# data files
+.txt
+.json
+GUI_demo.py
+
+/.idea
