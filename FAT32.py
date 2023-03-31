@@ -358,6 +358,13 @@ def print_data_to_file(data, filename):
 def print_to_json(data, filename):
     with open(filename, 'w') as f:
         json.dump(data, f, indent=4)
+    format_data_file(filename)
+
+def change_index(dict):
+        new_order = ["type", "size", "created", "modified"] 
+        new_dict = {key: dict[key] for key in new_order}
+
+        return new_dict  
 
 def format_dict(input_dict):
     if input_dict is None:
@@ -373,6 +380,7 @@ def format_dict(input_dict):
             value["contents"] = format_dict(contents)
             if value["contents"] is None:
                 value["contents"] = 'Empty'
+        value = change_index(value)
         output_dict[name] = value
     #pop size from folders
     for key, value in output_dict.items():
@@ -380,19 +388,24 @@ def format_dict(input_dict):
             value.pop("size", None)
     return output_dict
 
+def format_data_file(filename):
+    with open(filename, 'r') as f:
+        text = f.read().replace('null', "\"None\"")
+    with open(filename, 'w') as f:
+        f.write(text)
 
 #####################
-DRIVE = FAT32(0, '\\\\.\F:') #change the drive letter here
-DRIVE.readBootSector() #read the boot sector -> get the starting offset. Noted this is the compulsary step
-#get the next cluster of the cluster number 2
-RDET = (
-        DRIVE.getBootSector()['BPB_RsvdSecCnt'] +           
-        DRIVE.getBootSector()['BPB_NumFATs'] *              #calculate the Root Directory Entry Table
-        DRIVE.getBootSector()['BPB_SecsPerFAT'] +           #RDET = Reserved Sector Count + Number of FATs * Sectors per FAT + Starting Offset
-        DRIVE.getBootSector()['StartingOffset']             #RDET in FAT32 is stored in the root directory
-        ) * DRIVE.getBootSector()['BPB_BytesPerSec'] 
-DRIVE.FindDirectory(RDET) #find the directory of FAT32 drive
-DATA = DRIVE.getDATA() #get the data of the directory
+# DRIVE = FAT32(0, '\\\\.\F:') #change the drive letter here
+# DRIVE.readBootSector() #read the boot sector -> get the starting offset. Noted this is the compulsary step
+# #get the next cluster of the cluster number 2
+# RDET = (
+#         DRIVE.getBootSector()['BPB_RsvdSecCnt'] +           
+#         DRIVE.getBootSector()['BPB_NumFATs'] *              #calculate the Root Directory Entry Table
+#         DRIVE.getBootSector()['BPB_SecsPerFAT'] +           #RDET = Reserved Sector Count + Number of FATs * Sectors per FAT + Starting Offset
+#         DRIVE.getBootSector()['StartingOffset']             #RDET in FAT32 is stored in the root directory
+#         ) * DRIVE.getBootSector()['BPB_BytesPerSec'] 
+# DRIVE.FindDirectory(RDET) #find the directory of FAT32 drive
+# DATA = DRIVE.getDATA() #get the data of the directory
 
-print_to_json(format_dict(DATA), 'data_fat32.txt') #print the data in json format
+# print_to_json(format_dict(DATA), 'data_fat32.txt') #print the data in json format
 
