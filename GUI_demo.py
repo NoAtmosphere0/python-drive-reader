@@ -3,53 +3,85 @@ import json
 import tkinter.ttk as ttk
 import disk_info
 
+class import_data():
+    def __init__(self):
+        self.data_fat32 = None
+        self.data_ntfs = None
 
-def import_data_ntfs(file_path):
-    with open(file_path, "r") as file:
-        data_ntfs = json.load(file)
-    return data_ntfs
+        self.data_ntfs = self.read_data_ntfs()
+        self.data_fat32 = self.read_data_fat32()
 
-
-def import_data_fat32(file_path):
-    with open(file_path, "r") as file:
-        data_fat32 = json.load(file)
-    return data_fat32
-
-
-data_ntfs = import_data_ntfs("data_ntfs.txt")
-data_fat32 = import_data_fat32("data_fat32.txt")
+    # Load the data from data.txt into a Python dictionary
+    def read_data_ntfs(self):
+        with open("data_ntfs.txt", "r") as f:
+            data_ntfs = eval(f.read())
+        return data_ntfs
 
 
-# Load the data from data.txt into a Python dictionary
-def read_data_ntfs():
-    with open("data_ntfs.txt", "r") as f:
-        data_ntfs = eval(f.read())
-    return data_ntfs
+    def read_data_fat32(self):
+        with open("data_fat32.txt", "r") as j:
+            data_fat32 = eval(j.read())
+        return data_fat32
+    
+    def get_data(self):
+        print("import data class:")
+        print(self.data_ntfs)
+        print(self.data_fat32)
+        print("___________________________")
+        return self.data_ntfs, self.data_fat32
 
 
-def read_data_fat32():
-    with open("data_fat32.txt", "r") as j:
-        data_fat32 = eval(j.read())
-    return data_fat32
+# def import_data_ntfs(self, file_path):
+#     with open(file_path, "r") as file:
+#         data_ntfs = json.load(file)
+#     return data_ntfs
 
 
-data_ntfs = read_data_ntfs()
-data_fat32 = read_data_fat32()
+# def import_data_fat32(self, file_path):
+#     with open(file_path, "r") as file:
+#         data_fat32 = json.load(file)
+#     return data_fat32
 
-# Convert the Python dictionary to a JSON-formatted string
-json_data_ntfs = json.dumps(data_ntfs)
-# Write the JSON-formatted string to a new file
-with open("data_ntfs.json", "w") as f:
-    f.write(json_data_ntfs)
+class process_data():
+    def __init__(self):
+        import_object = import_data()
+        self.data_ntfs, self.data_fat32 = import_object.get_data()
 
-json_data_fat32 = json.dumps(data_fat32)
-# Write the JSON-formatted string to a new file
-with open("data_fat32.json", "w") as j:
-    j.write(json_data_fat32)
+        self.json_data_nfts, self.json_data_fat32 = self.write_to_json()
+    def write_to_json(self):
+        # Convert the Python dictionary to a JSON-formatted string
+        self.json_data_ntfs = json.dumps(self.data_ntfs)
+        
+        # Write the JSON-formatted string to a new file
+        #with open("data_ntfs.json", "w") as f:
+            #f.write(self.json_data_ntfs)
+
+        self.json_data_fat32 = json.dumps(self.data_fat32)
+        # Write the JSON-formatted string to a new file
+        #with open("data_fat32.json", "w") as j:
+            #j.write(self.json_data_fat32)
+
+        return self.json_data_ntfs, self.json_data_fat32
+
+    def get_processed_data(self):
+        print("process data class:")
+        print(self.json_data_ntfs)
+        print(self.json_data_fat32)
+        print("___________________________")
+        return self.data_ntfs, self.data_fat32
+
 
 
 class Explorer:
     def __init__(self):
+        data = process_data()
+        self.data_ntfs, self.data_fat32 = data.get_processed_data()
+
+        #self.data_ntfs = {"$MFT": {"type": "SYSTEM", "size": 262144, "created": "2023-03-08 16:24:36", "modified": "2023-03-08 16:24:36"}, "$MFTMirr": {"type": "SYSTEM", "size": 4096, "created": "2023-03-08 16:24:36", "modified": "2023-03-08 16:24:36"}, "$LogFile": {"type": "SYSTEM", "size": 4341760, "created": "2023-03-08 16:24:36", "modified": "2023-03-08 16:24:36"}, "$Volume": {"type": "SYSTEM", "size": 72, "created": "2023-03-08 16:24:36", "modified": "2023-03-08 16:24:36"}, "$AttrDef": {"type": "SYSTEM", "size": 2560, "created": "2023-03-08 16:24:36", "modified": "2023-03-08 16:24:36"}, "$Bitmap": {"type": "SYSTEM", "size": 131072, "created": "2023-03-08 16:24:36", "modified": "2023-03-08 16:24:36"}, "$Boot": {"type": "SYSTEM", "size": 8192, "created": "2023-03-08 16:24:36", "modified": "2023-03-08 16:24:36"}, "$BadClus": {"type": "SYSTEM", "size": 536870400, "created": "2023-03-08 16:24:36", "modified": "2023-03-08 16:24:36"}, "$Secure": {"type": "SYSTEM", "size": 263324, "created": "2023-03-08 16:24:36", "modified": "2023-03-08 16:24:36"}, "$UpCase": {"type": "SYSTEM", "size": 72, "created": "2023-03-08 16:24:36", "modified": "2023-03-08 16:24:36"}}
+        #self.data_fat32 = {"Ref_BT_FAT1.pdf": {"type": "file", "size": 457965, "created": "03/13/2023 16:13:30", "modified": "None"}, "Ref_BT_FAT2.pdf": {"type": "file", "size": 727716, "created": "03/13/2023 16:13:31", "modified": "None"}, "Ref_BT_NTFS.pdf": {"type": "file", "size": 577747, "created": "03/13/2023 16:13:31", "modified": "None"}, "Ref_FAT.pdf": {"type": "file", "size": 178413, "created": "03/13/2023 16:13:32", "modified": "None"}}
+
+        print(type(self.data_ntfs))
+
         self.root = tk.Tk()
         self.root.title("Disk Explorer")
         self.root.geometry("1200x300")
@@ -154,14 +186,14 @@ class Explorer:
         ntfs_button = tk.Button(
             button_frame,
             text="Load NTFS",
-            command=lambda: self.add_items("", data_ntfs),
+            command=lambda: self.add_items("", self.data_ntfs),
         )
         ntfs_button.pack(side=tk.LEFT, padx=10)
 
         fat32_button = tk.Button(
             button_frame,
             text="Load FAT32",
-            command=lambda: self.add_items("", data_fat32),
+            command=lambda: self.add_items("", self.data_fat32),
         )
         fat32_button.pack(side=tk.RIGHT, padx=10)
 
@@ -189,15 +221,16 @@ class Explorer:
                 tags = ("folder",)
             if value.get("type") == "file":
                 tags = ("file",)
+            print(value)
             node = self.tree.insert(
                 parent,
                 "end",
                 text=key,
                 values=[
-                    value.get("type", ""),
-                    value.get("size", ""),
-                    value.get("created", ""),
-                    value.get("modified", ""),
+                    value.get('type', ""),
+                    value.get('size', ""),
+                    value.get('created', ""),
+                    value.get('modified', ""),
                 ],
                 tags=tags,
             )
