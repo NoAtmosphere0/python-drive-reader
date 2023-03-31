@@ -52,16 +52,11 @@ class NTFS:
             self.sectors_per_cluster = int.from_bytes(vbr_data[13:14], byteorder='little')
 
             self.mft_start_cluster = int.from_bytes(vbr_data[48:56], byteorder='little')
-            print(f"MFT start cluster: {self.mft_start_cluster}")
 
             self.mft_offset = self.starting_offset + (self.mft_start_cluster * self.bytes_per_sector * self.sectors_per_cluster)
-            print(f"MFT offset: {self.mft_offset}")
-            
-            
+ 
             self.mft_record_size = int.from_bytes(vbr_data[0x40:0x41], byteorder='little') * self.bytes_per_sector
-            
-            print(f"MFT record size: {self.mft_record_size}")	
-        
+                    
         self.readMFT()
 
     def change_index(self, dict):

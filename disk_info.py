@@ -97,3 +97,9 @@ class MBR:
 
     def get_partitions(self):
         return self.partitions
+    
+    def get_partitions_offset(self):
+        ntfs_offset = self.partitions["NTFS"][0]
+        fat32_offset = self.partitions["FAT32"][0]
+        return ntfs_offset, fat32_offset
+    

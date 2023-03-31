@@ -17,6 +17,7 @@ class FAT32:
         self.BPB_totSec32 = 0 #4 bytes
         self.BPB_SecsPerFAT = 0 #4 bytes
         self.BPB_RootClus = 0 #4 bytes
+        self.drive_path = r"\\.\E:"
         #Entry FAT32
         self.DIR_Name = '' #11 bytes
         self.DIR_Attr = 'type' #1 byte
@@ -26,7 +27,9 @@ class FAT32:
         self.DIR_DateMod = 'Date Modified'
         self.DIR_FileSize = 0 #4 bytes
         self.DIR_CurClus = 0 #4 bytes
+        self.starting_offset = 0 
         self.DIR_NxtClus = 0 #4 bytes
+
     
     def readBootSector(self)->None:
         with open(self.drive_path, 'rb') as f:
@@ -40,66 +43,9 @@ class FAT32:
             self.BPB_SecsPerFAT = int.from_bytes(self.byte[36:40], byteorder='little')
             self.BPB_RootClus = int.from_bytes(self.byte[44:48], byteorder='little')
             self.BPB_FSInfo = int.from_bytes(self.byte[48:52], byteorder='little')
+        
     
-    # def checkLast(self, offset:hex, startingOffset, root):
-    #     with open(self.drive_path, 'rb') as f:
-    #         f.seek(offset)
-    #         self.byte = f.read(512)
-    #         for i in range (startingOffset, 512, 1):
-    #             if(self.byte[i] != 0x00):
-    #                 return False
-    #         return True
-    
-    # def firstNextCluster(self, offset:hex):
-    #     with open(self.drive_path, 'rb') as f:
-    #         f.seek(offset)
-    #         self.byte = f.read(512)
-    #         i = 128
-    #         while True:
-    #             if (i >= 512):
-    #                 f.seek(offset + 512)
-    #                 self.byte = f.read(512)
-    #                 i = 0
-    #             if (self.byte[i] == 0xE5 or self.byte[i] == 0x00):
-    #                 i = i + 32
-    #             else:
-    #                 if (self.byte[i+11] == 0x10): #Directory to get the first next cluster
-    #                     temp = self.byte[i+26:i+27]
-    #                     binary_string = ''.join(f'{byte:08b}' for byte in temp)
-    #                     int_value = int(binary_string, 2)
-    #                     return int_value
-    #                     break
-    #                 else:
-    #                     i = i + 32     
-    
-    # def NextCluster(self, offset:hex, startingOffset, root, destination):
-    #     with open(self.drive_path, 'rb') as f:
-    #         f.seek(offset)
-    #         if (destination == 0): 
-    #             self.byte = f.read(512)
-    #             for i in range (startingOffset, 512, 32):
-    #                 if (self.byte[i] == 0xE5 or self.byte[i] == 0x00):
-    #                     continue
-    #                 else:
-    #                     if (self.byte[i+11] == 0x10): #Directory
-    #                         #next cluster
-    #                         temp = self.byte[i+26:i+27]
-    #                         binary_string = ''.join(f'{byte:08b}' for byte in temp)
-    #                         int_value = int(binary_string, 2)
-    #         else:
-    #             self.byte = f.read((destination - root) * 512)
-    #             for i in range (startingOffset, (destination - root) * 512, 32):
-    #                 if (self.byte[i] == 0xE5 or self.byte[i] == 0x00):
-    #                     continue
-    #                 else:
-    #                     if (self.byte[i+11] == 0x10): #Directory
-    #                         #next cluster
-    #                         temp = self.byte[i+26:i+27]
-    #                         binary_string = ''.join(f'{byte:08b}' for byte in temp)
-    #                         int_value = int(binary_string, 2)
-    #         return int_value
-    
-    def detectFile(self, offset:hex, startingOffset, root):
+    def detectFile(self, offset, startingOffset, root):
         with open(self.drive_path, 'rb') as f:
             f.seek(offset)
             self.byte = f.read(512)
@@ -201,7 +147,9 @@ class FAT32:
     def detectDIR(self, offset:hex, startingOffset, root):
         with open(self.drive_path, 'rb') as f:
             f.seek(offset)
-            self.byte = f.read(512)
+            byte1 = f.read(256)
+            byte2 = f.read(256)
+            self.byte = byte1 + byte2
             number = 0
             sub = {}
             for i in range (startingOffset, 512, 32):
@@ -316,8 +264,9 @@ class FAT32:
         return sub
 
     def FindDirectory(self, offset:hex)->None:
-        for i in range(0, len(self.detectROOT(offset, 128, self.BPB_RootClus)), 1):
-                self.info_dict.update({i: self.detectROOT(offset, 128, self.BPB_RootClus)[i]})
+        num = len(self.detectROOT(offset, 64, self.BPB_RootClus))
+        for i in range(0, num, 1):
+            self.info_dict.update({i: self.detectROOT(offset, 128, self.BPB_RootClus)[i]})
     
     def getDATA(self)->None:
         temp = self.info_dict
@@ -394,18 +343,4 @@ def format_data_file(filename):
     with open(filename, 'w') as f:
         f.write(text)
 
-#####################
-# DRIVE = FAT32(0, '\\\\.\F:') #change the drive letter here
-# DRIVE.readBootSector() #read the boot sector -> get the starting offset. Noted this is the compulsary step
-# #get the next cluster of the cluster number 2
-# RDET = (
-#         DRIVE.getBootSector()['BPB_RsvdSecCnt'] +           
-#         DRIVE.getBootSector()['BPB_NumFATs'] *              #calculate the Root Directory Entry Table
-#         DRIVE.getBootSector()['BPB_SecsPerFAT'] +           #RDET = Reserved Sector Count + Number of FATs * Sectors per FAT + Starting Offset
-#         DRIVE.getBootSector()['StartingOffset']             #RDET in FAT32 is stored in the root directory
-#         ) * DRIVE.getBootSector()['BPB_BytesPerSec'] 
-# DRIVE.FindDirectory(RDET) #find the directory of FAT32 drive
-# DATA = DRIVE.getDATA() #get the data of the directory
-
-# print_to_json(format_dict(DATA), 'data_fat32.txt') #print the data in json format
 

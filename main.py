@@ -1,40 +1,27 @@
 import NTFS
 import disk_info
-
 import FAT32
 import GUI
-#import GUI_demo
-
-"""{'partition_type': '0xbc', 
-    'starting_sector': 525338448, 
-    'Disk size': '992.8670635223389 MB', 
-    'partitions': {
-        'NTFS': [65536, 536870912], 
-        'FAT32': [536936448, 536870912]
-        }   
-    }"""
 
 def main():
-    ntfs_path = r"bin_files\bin_NTFS_Partition1.bin"
-    fat32_path = r"bin_files\bin_FAT32_Partition2.bin"
-    disk_info_path = r"bin_files\bin_disk_information.bin"
-    physical_fat32 = r"\\.\Physicalfat321"
-    #! This path should be Physicalfat321 in the final version
+    physical_drive = r"\\.\PhysicalDrive1"  
 
-    """"Testing the partition table class"""
-    pt = disk_info.MBR(disk_info_path)
-    info_dict = pt.getInfoDict()
-    pt.printMBR()
-    print(info_dict)
+    print("Reading the physical drive....")
 
-    """"Testing the NTFS class"""
-    ntfs = NTFS.NTFS(0, ntfs_path)
+    """"MBR class"""
+    pt = disk_info.MBR(physical_drive)
+    ntfs_offset, fat32_offset = pt.get_partitions_offset()
+
+    print("FAT32 offset: ", fat32_offset)
+    print("NTFS offset: ", ntfs_offset)
+
+    """"NTFS class"""
+    ntfs = NTFS.NTFS(ntfs_offset, physical_drive)
     ntfs.get_entries_text()
-    #ntfs.print_entries()
-    #print(ntfs.get_entries())
+
     
-    
-    fat32 = FAT32.FAT32(0, fat32_path)
+    """"FAT32 class"""
+    fat32 = FAT32.FAT32(fat32_offset, physical_drive)
     fat32.readBootSector()
     RDET = (
         fat32.getBootSector()['BPB_RsvdSecCnt'] +           
@@ -47,6 +34,7 @@ def main():
 
     FAT32.print_to_json(FAT32.format_dict(DATA), 'data_fat32.txt') #print the data in json format
 
+    print("Starting GUI")
     GUI.main()
     print("Exiting main()")
 
