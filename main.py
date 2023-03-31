@@ -3,7 +3,7 @@ import NTFS
 
 # import FAT32
 import GUI
-#import GUI_demo
+import GUI_demo
 
 
 def main():
@@ -27,7 +27,9 @@ def main():
 
     ntfs.get_entries_text()
 
+
     
+
 
     print("Exiting main()")
 

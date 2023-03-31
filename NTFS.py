@@ -29,14 +29,6 @@ class NTFS:
         self.drive_path = drive
         self._readVBR()
     
-    def get_size(self, drive):  # Gets the size of the NTFS partition
-        with open(drive, 'rb') as f:
-            f.seek(self.starting_offset + 0x18)
-            self.size = int.from_bytes(f.read(8), byteorder='little')
-            return self.size
-        
-    def print_size(self): # Prints the size of the NTFS partition
-        print(f"Size: {self.size}")
 
     def print_stats(self): # Prints the statistics of the NTFS partition
         print(f"Bytes per sector: {self.bytes_per_sector}")
